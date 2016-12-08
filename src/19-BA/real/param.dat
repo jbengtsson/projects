@@ -1,8 +1,8 @@
 # energy [GeV]
 energy       3.0
 # input files
-in_dir       /home/johan/projects/in/
-flat_file    /home/johan/projects/src/
+in_dir       /home/johan/git_repos/projects/in/
+flat_file    /home/johan/git_repos/projects/src/
 # seed should be 2279.
 ae_file      Align_Err/AlignErr.m4.20140130.dat
 #fe_file      Field_Err/FieldErr.m4.20140514.dat
