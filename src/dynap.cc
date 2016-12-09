@@ -5,11 +5,6 @@
 int no_tps = NO;
 
 
-// instantiate templates
-// template class vector<std::string>;
-// template class vector<long int>;
-
-
 void err_and_corr(const char *param_file,
 		  const double delta, const int n_delta)
 {
