@@ -640,6 +640,10 @@ int main(int argc, char *argv[])
 {
   double beta[2];
 
+  // Problem with STL vector class.
+  std::vector<std::string> dummy[2];
+  dummy[X_].push_back("1"); dummy[Y_].push_back("2");
+
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;

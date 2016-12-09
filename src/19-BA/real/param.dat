@@ -1,18 +1,18 @@
 # energy [GeV]
 energy       3.0
 # input files
-in_dir       /home/johan/git_repos/projects/in/
-flat_file    /home/johan/git_repos/projects/src/
+in_dir       /mxn/home/johben/git_repos/projects/in/
+flat_file    /mxn/home/johben/git_repos/projects/src/19_BA/
 # seed should be 2279.
 ae_file      Align_Err/AlignErr.m4.20140130.dat
 #fe_file      Field_Err/FieldErr.m4.20140514.dat
 #ap_file      Aper/Apertures.dat
 # flags
 freq_map      true 301 101 301 2064 20e-3 3e-3 3e-2
-DA_bare       false 
+DA_bare       true 
 # parameters
 s_cut         1.0    // truncate gaussian distribution at 1 sigma
-n_stat        1
+n_stat        20
 #n_scale       1
 n_orbit       10
 bpm_names     bpm

@@ -95,9 +95,7 @@ int main(int argc, char *argv[])
   double        alpha[2], beta[2], eta[2], etap[2];
   ostringstream str;
 
-  // Work around.
-  std::vector<std::string> dummy[2];
-  dummy[X_].push_back("1"); dummy[Y_].push_back("2");
+  const double delta = 3e-2;
 
   const int   n_bpm_Fam = 1, n_hcorr_Fam = 1, n_vcorr_Fam = 1;
 
@@ -121,7 +119,9 @@ int main(int argc, char *argv[])
 
   Ring_GetTwiss(true, 0.0); printglob();
 
-  // GetEmittance(ElemIndex("cav"), true);
+  if (true) get_alphac2();
+
+// GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
     for (k = 0; k < 2; k++) {
@@ -147,4 +147,10 @@ int main(int argc, char *argv[])
   prt_lat("chromlat.out", globval.bpm, true, 10);
 
   prtmfile("flat_file.dat");
+
+  if (false) {
+    globval.Cavity_on = true; n_track = 512;
+    n_aper = 25;
+    get_dynap(delta, true);
+  }
 }

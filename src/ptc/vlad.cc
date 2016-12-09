@@ -104,7 +104,7 @@ double f_opt(double prms[])
   double          h, x_max, px_max;
   double          deltas[n], x_delta[n], px_delta[n], ct_delta[n];
   double          x2d_intgrl, px2d_intgrl, sigma, f, T566;
-  Vector          b;
+  psVector          b;
   ss_vect<double> ps;
 
   const int    n_pol = 3;

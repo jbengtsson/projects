@@ -66,17 +66,6 @@ void err_and_corr(const char *param_file, const double delta, const int mode)
   prt_lat("linlat_err.out", globval.bpm, true);
   prtmfile("flat_file_err.dat");
 
-  if (mode == 1) {
-    cout << "fmap" << endl;
-    fmap(n_x, n_y, n_tr, x_max_FMA, y_max_FMA, 0.0, true, false);
-  } else if (mode == 2) {
-    cout << "fmapdp" << endl;
-    fmapdp(n_x, n_dp, n_tr, x_max_FMA, -delta_FMA, 0.1e-3, true, false);
-  } else {
-    cout << "bad param.: mode = " << mode << endl;
-    exit(1);
-  }
-
   globval.Cavity_on = cav; globval.radiation = rad; globval.Aperture_on = aper;
 }
 
@@ -90,4 +79,15 @@ int main(int argc, char *argv[])
   globval.pathlength  = false; globval.Aperture_on = false;
 
   err_and_corr("param.dat", delta, atoi(argv[1]));
+
+  if (mode == 1) {
+    cout << "fmap" << endl;
+    fmap(n_x, n_y, n_tr, x_max_FMA, y_max_FMA, 0.0, true, false);
+  } else if (mode == 2) {
+    cout << "fmapdp" << endl;
+    fmapdp(n_x, n_dp, n_tr, x_max_FMA, -delta_FMA, 0.1e-3, true, false);
+  } else {
+    cout << "bad param.: mode = " << mode << endl;
+    exit(1);
+  }
 }
