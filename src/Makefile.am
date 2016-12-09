@@ -1,11 +1,11 @@
 SUBDIRS      = ptc
 
-bin_PROGRAMS = main max_iv_1 vlad basic dynap leac dnu m4_1
+bin_PROGRAMS = vlad basic dynap leac dnu m4_1
 
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
-main_SOURCES     = main.cc
-max_iv_1_SOURCES = max_iv_1.cc
+#main_SOURCES     = main.cc
+#max_iv_1_SOURCES = max_iv_1.cc
 vlad_SOURCES     = vlad.cc
 basic_SOURCES    = basic.cc
 dynap_SOURCES    = dynap.cc
