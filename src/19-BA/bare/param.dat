@@ -21,6 +21,9 @@ n_orbit       10
 #gs            gs
 #ge            ge
 #
+n_track       512
+n_delta       12
+delta         3e-2
 n_lin         0
 #qt            sq
 #disp_wave_y   0e-3
