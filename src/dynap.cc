@@ -20,7 +20,6 @@ void err_and_corr(const string &param_file)
 
   DA.get_DA_real(params, orb_corr);
 
-  // Reset state.
   globval.Cavity_on = cav; globval.radiation = rad; globval.Aperture_on = aper;
 }
 
