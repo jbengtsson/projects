@@ -1,16 +1,18 @@
 SUBDIRS      = ptc
 
-bin_PROGRAMS = vlad optics dynap leac dnu m4_1
+bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad m4_1
 
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
 #main_SOURCES     = main.cc
 #max_iv_1_SOURCES = max_iv_1.cc
-vlad_SOURCES     = vlad.cc
 optics_SOURCES   = optics.cc
 dynap_SOURCES    = dynap.cc
 dnu_SOURCES      = dnu.cc
 leac_SOURCES     = leac.cc
+touschek_SOURCES = touschek.cc
+ibs_SOURCES      = ibs.cc
+vlad_SOURCES     = vlad.cc
 m4_1_SOURCES     = m4_1.cc
 
 #LIBS     = -L$(TRACY_LIB)/tracy -ltracy
