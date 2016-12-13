@@ -8,16 +8,9 @@ int no_tps = NO;
 int main(int argc, char *argv[])
 {
   int           k;
-  double        alpha[2], beta[2], eta[2], etap[2];
   ostringstream str;
 
   const double delta = 3e-2;
-
-  const int   n_bpm_Fam = 1, n_hcorr_Fam = 1, n_vcorr_Fam = 1;
-
-  const string  bpm_names[n_bpm_Fam]     = { "BPM" };
-  const string  hcorr_names[n_hcorr_Fam] = { "CHV" };
-  const string  vcorr_names[n_vcorr_Fam] = { "CHV" };
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -35,18 +28,9 @@ int main(int argc, char *argv[])
 
   Ring_GetTwiss(true, 0.0); printglob();
 
-  if (true) get_alphac2();
+  if (false) get_alphac2();
 
 // GetEmittance(ElemIndex("cav"), true);
-
-  if (false) {
-    for (k = 0; k < 2; k++) {
-      alpha[k] = Cell[0].Alpha[k]; beta[k] = Cell[0].Beta[k];
-      eta[k] = 0e0; etap[k] = 0e0;
-    }
-
-    ttwiss(alpha, beta, eta, etap, 0.0);
-  }
 
   if (false) {
 //     str << home_dir << "/Thor-2.0/thor/wrk/fit_isoch.dat";

@@ -1,13 +1,13 @@
 SUBDIRS      = ptc
 
-bin_PROGRAMS = vlad basic dynap leac dnu m4_1
+bin_PROGRAMS = vlad optics dynap leac dnu m4_1
 
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
 #main_SOURCES     = main.cc
 #max_iv_1_SOURCES = max_iv_1.cc
 vlad_SOURCES     = vlad.cc
-basic_SOURCES    = basic.cc
+optics_SOURCES   = optics.cc
 dynap_SOURCES    = dynap.cc
 dnu_SOURCES      = dnu.cc
 leac_SOURCES     = leac.cc
