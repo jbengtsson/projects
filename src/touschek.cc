@@ -40,7 +40,7 @@ void err_and_corr(const string &param_file)
 	   eps_x, eps_y, sigma_delta, sigma_s,
 	   n_track, true, sum_delta, sum2_delta);
 
-  fp = file_write(file_name); 
+  fp = file_write((file_name).c_str()); 
   for(j = 0; j <= globval.Cell_nLoc; j++)
     fprintf(fp, "%4d %7.2f %5.3f %6.3f\n",
 	    j, Cell[j].S, 1e2*sum_delta[j][X_], 1e2*sum_delta[j][Y_]);
