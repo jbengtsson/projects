@@ -13,6 +13,8 @@ void err_and_corr(const string &param_file)
 
   params.err_and_corr_init(param_file, orb_corr);
 
+  globval.Cavity_on = true;
+
   if (params.DA_bare) DA.get_DA_bare(params);
 
   DA.get_DA_real(params, orb_corr);
