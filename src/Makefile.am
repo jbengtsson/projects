@@ -1,6 +1,6 @@
 SUBDIRS      = ptc
 
-bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad m4_1
+bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad
 
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
@@ -13,7 +13,7 @@ leac_SOURCES     = leac.cc
 touschek_SOURCES = touschek.cc
 ibs_SOURCES      = ibs.cc
 vlad_SOURCES     = vlad.cc
-m4_1_SOURCES     = m4_1.cc
+#m4_1_SOURCES     = m4_1.cc
 
 #LIBS     = -L$(TRACY_LIB)/tracy -ltracy
 # gfortran needs to be before stdc_++ for Fortran programs

@@ -7,7 +7,6 @@ int no_tps = NO;
 
 void err_and_corr(const string &param_file)
 {
-  bool            cav, rad, aper;
   int             j;
   param_data_type params;
   orb_corr_type   orb_corr[2];
@@ -17,8 +16,6 @@ void err_and_corr(const string &param_file)
   const double sigma_s = 3.4e-3, sigma_delta = 0.52e-3;
 
   const string file_name = "mom_aper.out";
-
-  cav = globval.Cavity_on; rad = globval.radiation; aper = globval.Aperture_on;
 
   params.err_and_corr_init(param_file, orb_corr);
 
@@ -47,8 +44,6 @@ void err_and_corr(const string &param_file)
   fclose(fp);
 
   params.err_and_corr_exit(orb_corr);
-
-  globval.Cavity_on = cav; globval.radiation = rad; globval.Aperture_on = aper;
 }
 
 

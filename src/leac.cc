@@ -7,11 +7,8 @@ int no_tps = NO;
 
 void err_and_corr(const string &param_file, const int mode)
 {
-  bool            cav, rad, aper;
   param_data_type params;
   orb_corr_type   orb_corr[2];
-
-  cav = globval.Cavity_on; rad = globval.radiation; aper = globval.Aperture_on;
 
   params.err_and_corr_init(param_file, orb_corr);
 
@@ -29,14 +26,11 @@ void err_and_corr(const string &param_file, const int mode)
   }
 
   params.err_and_corr_exit(orb_corr);
-
-  globval.Cavity_on = cav; globval.radiation = rad; globval.Aperture_on = aper;
 }
 
 
 int main(int argc, char *argv[])
 {
-
   globval.H_exact     = false; globval.quad_fringe = false;
   globval.Cavity_on   = false; globval.radiation   = false;
   globval.emittance   = false; globval.IBS         = false;
