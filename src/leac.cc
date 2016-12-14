@@ -42,5 +42,5 @@ int main(int argc, char *argv[])
   globval.emittance   = false; globval.IBS         = false;
   globval.pathlength  = false; globval.Aperture_on = false;
 
-  err_and_corr("param.dat", atoi(argv[1]));
+  err_and_corr(argv[1], atoi(argv[2]));
 }
