@@ -21,7 +21,9 @@ void err_and_corr(const string &param_file)
 
   globval.delta_RF = 10e-2;
 
-  Touschek(Qb, globval.delta_RF, eps_x, eps_y, sigma_delta, sigma_s);
+  globval.Cavity_on = true;
+
+ Touschek(Qb, globval.delta_RF, eps_x, eps_y, sigma_delta, sigma_s);
       
   double  sum_delta[globval.Cell_nLoc+1][2];
   double  sum2_delta[globval.Cell_nLoc+1][2];
@@ -35,7 +37,7 @@ void err_and_corr(const string &param_file)
  
   Touschek(Qb, globval.delta_RF, false,
 	   eps_x, eps_y, sigma_delta, sigma_s,
-	   n_track, true, sum_delta, sum2_delta);
+	   n_track, false, sum_delta, sum2_delta);
 
   fp = file_write((file_name).c_str()); 
   for(j = 0; j <= globval.Cell_nLoc; j++)
