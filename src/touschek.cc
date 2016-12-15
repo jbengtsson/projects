@@ -19,7 +19,7 @@ void err_and_corr(const string &param_file)
 
   params.err_and_corr_init(param_file, orb_corr);
 
-  globval.delta_RF = 3.0e-2;
+  globval.delta_RF = 10e-2;
 
   Touschek(Qb, globval.delta_RF, eps_x, eps_y, sigma_delta, sigma_s);
       

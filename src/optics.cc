@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 
   if (false) get_alphac2();
 
-// GetEmittance(ElemIndex("cav"), true);
+  GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
 //     str << home_dir << "/Thor-2.0/thor/wrk/fit_isoch.dat";
