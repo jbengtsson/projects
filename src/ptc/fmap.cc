@@ -3,19 +3,15 @@
 
 #include "tracy_lib.h"
 
-int  no_tps   = NO,
-     ndpt_tps = 5;
+int no_tps   = NO,
+    ndpt_tps = 5;
 
 
-const char home_dir[] = "/home/bengtsson";
-
-ss_vect<tps>  A_inv;
-FILE          *gnuplot[1];
+ss_vect<tps> A_inv;
 
 
 void get_map_normal_form()
 {
-
   danot_(no_tps);
 
   MNF = MapNorm(map, no_tps);
@@ -24,10 +20,10 @@ void get_map_normal_form()
 
 void get_A(void)
 {
-  int           j;
-  iVector       jj;
-  tps           gn;
-  ss_vect<tps>  Id, A;
+  int          j;
+  iVector      jj;
+  tps          gn;
+  ss_vect<tps> Id, A;
 
   Id.identity(); A = MNF.A1;
   for (j = no_tps; j >= 3; j--) {
@@ -43,9 +39,9 @@ void get_A(void)
 
 void get_twoJ(const ss_vect<double> &ps, double twoJ[])
 {   
-  int              j;
-  ss_vect<double>  z;
-  ss_vect<tps>     Id;
+  int             j;
+  ss_vect<double> z;
+  ss_vect<tps>    Id;
 
   z = (A_inv*ps).cst();
 
@@ -58,11 +54,11 @@ void fmap(const double Ax, const double Ay)
 {
   const int  n_ampl = 10;
 
-  int              i, j;
-  double           twoJ[2], nu[2], A[2];
-  ss_vect<double>  ps;
-  ss_vect<tps>     Id, nus;
-  std::ofstream         fmap_out;
+  int             i, j;
+  double          twoJ[2], nu[2], A[2];
+  ss_vect<double> ps;
+  ss_vect<tps>    Id, nus;
+  std::ofstream   fmap_out;
 
   file_wr(fmap_out, "fmap_est.dat");
 
@@ -101,11 +97,11 @@ void fmapdp(const double Ax, const double delta)
 {
   const int  n_ampl = 10;
 
-  int              i, j;
-  double           twoJ[2], nu[2], A[2], d;
-  ss_vect<double>  ps;
-  ss_vect<tps>     Id, nus;
-  std::ofstream         fmapdp_out;
+  int             i, j;
+  double          twoJ[2], nu[2], A[2], d;
+  ss_vect<double> ps;
+  ss_vect<tps>    Id, nus;
+  std::ofstream   fmapdp_out;
 
   file_wr(fmapdp_out, "fmapdp_est.dat");
 
@@ -143,8 +139,7 @@ void fmapdp(const double Ax, const double delta)
 
 int main(int argc, char *argv[])
 {
-  char  str[max_str];
-  int   k;
+  int  k;
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -154,13 +149,10 @@ int main(int argc, char *argv[])
   // disable from TPSALib- and LieLib log messages
   idprset_(-1);
 
-  sprintf(str, "%s%s", home_dir, "/projects/src/");
-//  rdmfile(strcat(str, "flat_file.dat"));
-
   if (false)
     Read_Lattice(argv[1]);
   else
-    rdmfile("flat_file.dat");
+    rdmfile(argv[1]);
 
   globval.EPU = true;
 

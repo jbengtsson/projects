@@ -19,5 +19,5 @@ int main(int argc, char *argv[])
 
   globval.EPU = false;
 
-  dnu_dA(4e-3, 4e-3, 0.0, 25); get_ksi2(3.0e-2);
+  dnu_dA(4e-3, 4e-3, 0e0, 25); get_ksi2(3e-2);
 }
