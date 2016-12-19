@@ -4,6 +4,44 @@
 
 int no_tps = NO;
 
+extern bool freq_map;
+extern int  N_Fam, Q_Fam[];
+
+// dynamic aperture
+const double delta  = 3e-2; // delta for off-momentum aperture
+
+
+double get_eps_x1(void)
+{
+  bool         cav, emit;
+  long int     lastpos;
+  double       eps_x;
+  ss_vect<tps> A;
+
+  cav = globval.Cavity_on; emit = globval.emittance;
+
+  globval.Cavity_on = false; globval.emittance = false;
+
+  Ring_GetTwiss(false, 0e0);
+
+  putlinmat(6, globval.Ascr, A);
+
+  prt_lin_map(3, A);
+
+  globval.emittance = true;
+
+  Cell_Pass(0, globval.Cell_nLoc, A, lastpos);
+
+  eps_x = 1470e0*pow(globval.Energy, 2)*I5/(I2-I4);
+
+  printf("\neps_x = %5.3f pm.rad, J_x = %5.3f, J_z = %5.3f \n",
+	 1e3*eps_x, 1e0-I4/I2, 2e0+I4/I2);
+
+  globval.Cavity_on = cav; globval.emittance = emit;
+
+  return eps_x;
+}
+
 
 void prt_ZAP(const int n)
 {
@@ -29,115 +67,71 @@ void prt_ZAP(const int n)
 }
 
 
-void chk_IBS(void)
+void get_IBS(const int n, const double ds, const double Qb, const double eps[])
 {
-  int       k;
-  double    chi;
-  std::ofstream  outf;
+  int    i, j;
+  double eps0[3], eps1[3], sigma0_s, sigma0_delta, sigma_s, sigma_delta;
+  FILE   *outf;
 
-  const double  chi_min = 1e-9, chi_max = 1e-5, fact = 2.0;
+  const char file_name[] = "ibs.out";
+  const int n_iter = 20;
 
+  outf = file_write(file_name);
 
-  file_wr(outf, "chk_IBS.out");
+  for (j = 0; j < 3; j++)
+    eps0[j] = eps[j];
 
-  k = 0; chi_m = chi_min;
-  while (chi_m <= chi_max) {
-    k++;
+  // alpha_z << 1 => eps_z ~ sigma_s * sigma_delta.
+  sigma0_s = sqrt(globval.beta_z*eps0[Z_]); sigma0_delta = eps0[Z_]/sigma0_s;
 
-    chi = f_IBS(chi_m);
+  fprintf(outf, "# sigma0_s eps_x    ratio_x  eps_y    ratio_y"
+	  "  sigma_s  sigma_delta\n");
+  fprintf(outf, "#   [cm]  [pm.rad]          [pm.rad]   [cm]\n");
+  for (i = 1; i <= n; i++) {
+    for (j = 0; j < 3; j++)
+      eps1[j] = eps0[j];
 
-    outf << std::scientific << std::setprecision(5)
-	 << std::setw(4) << k << std::setw(12) << chi_m << std::setw(12) << chi;
-
-    chi = get_int_IBS();
-
-    outf << std::scientific << std::setprecision(5)
-	 << std::setw(12) << chi << std::endl;
-
-    chi_m *= fact;
-  }
-
-  outf.close();
-}
-
-
-void get_Touschek(void)
-{
-  long int      k;
-  int           j;
-  double        gamma_z, eps[3];
-  double        sum_delta[globval.Cell_nLoc+1][2];
-  double        sum2_delta[globval.Cell_nLoc+1][2];
-  FILE          *fp;
-
-  const double  Qb = 1.3e-9;
-
-  globval.eps[X_] = 2.040e-9;
-  globval.eps[Y_] = 8e-12;
-  globval.eps[Z_] = 1.516e-6;
-
-  globval.alpha_z = 2.502e-02; globval.beta_z = 5.733;
-
-  if (true) {
     printf("\n");
-    printf("alpha: %11.3e %11.3e %11.3e\n",
-	   globval.alpha_rad[X_], globval.alpha_rad[Y_],
-	   globval.alpha_rad[Z_]);
-
-    for (j = 0; j < 3; j++)
-      eps[j] = globval.eps[j];
-
-    for (j = 1; j <= 0; j++)
-      IBS(Qb, globval.eps, eps, true, true);
-
-    for (j = 0; j < 3; j++)
-      eps[j] = globval.eps[j];
-
-    for (j = 1; j <= 5; j++)
-      IBS_BM(Qb, globval.eps, eps, true, true);
-  }
-
-  if (true) {
-    globval.delta_RF = 3.0e-2;
-//     Touschek(Qb, globval.delta_RF, 0.85e-9, 8e-12, 0.84e-3, 4.4e-3);
-    gamma_z = (1.0+sqr(globval.alpha_z))/globval.beta_z;
-//     Touschek(Qb, globval.delta_RF, eps[X_], eps[Y_],
-// 	     sqrt(gamma_z*eps[Z_]), sqrt(globval.beta_z*eps[Z_]));
-    Touschek(Qb, 3.03e-2, 2.446e-9, 9.595e-12, 0.580e-3, 3.33e-3);
-
-    if (false) {
-      // initialize momentum aperture arrays
-      for(k = 0; k <= globval.Cell_nLoc; k++){
-	sum_delta[k][0] = 0.0; sum_delta[k][1] = 0.0;
-	sum2_delta[k][0] = 0.0; sum2_delta[k][1] = 0.0;
-      }
-
-      Touschek(1.3e-9, globval.delta_RF, false,
-	       0.85e-9, 0.008e-9, 0.84e-3, 4.4e-3,
-	       512, true, sum_delta, sum2_delta);
-
-      fp = file_write("mom_aper.out");
-      for(k = 0; k <= globval.Cell_nLoc; k++)
-	fprintf(fp, "%4ld %7.2f %5.3f %6.3f\n",
-		k, Cell[k].S, 1e2*sum_delta[k][0], 1e2*sum_delta[k][1]);
+    for (j = 1; j <= n_iter; j++) {
+      if (j == 1) {
+	printf("\nIBS %d:\n", j);
+	IBS_BM(Qb, eps, eps1, true, true);
+      } else if ((j == n_iter-1) || (j == n_iter)) {
+	printf("\nIBS %d:\n", j);
+	IBS_BM(Qb, eps0, eps1, false, true);
+      } else
+	IBS_BM(Qb, eps0, eps1, false, false);
     }
+
+    sigma_s = sqrt(globval.beta_z*eps1[Z_]);
+    sigma_delta = eps1[Z_]/sigma_s;
+    fprintf(outf, "%8.3f %8.3f %8.3f %8.3f %8.3f %8.3f %12.3e\n",
+	    1e2*sigma0_s, 1e12*eps1[X_], eps1[X_]/eps0[X_], 1e12*eps1[Y_],
+	    eps1[Y_]/eps0[Y_], 1e2*sigma_s, sigma_delta);
+    fflush(outf);
+
+    // alpha_z << 1 => eps_z ~ sigma_s * sigma_delta.
+    sigma0_s += ds; eps0[Z_] = sigma0_s*sigma0_delta;
+    globval.beta_z = sqr(sigma0_s)/eps0[Z_];
   }
+
+  fclose(outf);
 }
 
 
 int main(int argc, char *argv[])
 {
-  const long  seed = 1121;
-
-  iniranf(seed); setrancut(1.0);
+  int           qf, qd, sf, sd, j;
+  double        b2[2], a2, b3[2], a3;
+  ss_vect<tps>  map;
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
-  // disable from TPSALib- and LieLib log messages
-//  idprset(-1);
+  const double Qb   = 5e-9, sigma_s = 1e-2, sigma_delta = 1e-3;
+  const double nu[] = {101.9/20.0, 27.6/20.0};
 
   if (true)
     Read_Lattice(argv[1]);
@@ -148,15 +142,22 @@ int main(int argc, char *argv[])
 
   Ring_GetTwiss(true, 0.0); printglob();
 
-//   prt_ZAP(15);
+ if (false) prt_ZAP(20);
 
-  Ring_GetTwiss(true, 0.0); printglob();
-
-  prtmfile("flat_file.dat");
-
+  get_eps_x1();
   GetEmittance(ElemIndex("cav"), true);
 
-//  chk_IBS();
+  printf("\nalpha_z = %11.3e, beta_z = %10.3e\n",
+	 globval.alpha_z,  globval.beta_z);
 
-  get_Touschek();
+  globval.eps[Y_] = globval.eps[X_];
+
+  // alpha_z << 1 => eps_z ~ sigma_s * sigma_delta.
+  globval.eps[Z_] = sigma_s*sigma_delta;
+  globval.beta_z  = sqr(sigma_s)/globval.eps[Z_];
+
+  printf("\nbeta_z = %5.3f, eps_z = %10.3e\n",
+	 globval.beta_z, globval.eps[Z_]);
+
+  get_IBS(21, 1e-2, Qb, globval.eps);
 }

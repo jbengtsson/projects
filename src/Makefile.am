@@ -5,7 +5,6 @@ bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
 #main_SOURCES     = main.cc
-#max_iv_1_SOURCES = max_iv_1.cc
 optics_SOURCES   = optics.cc
 dynap_SOURCES    = dynap.cc
 dnu_SOURCES      = dnu.cc
