@@ -13,8 +13,8 @@ void err_and_corr(const string &param_file)
   orb_corr_type   orb_corr[2];
   FILE            *fp;
 
-  const double Qb = 5e-9, eps_x = 16e-12, eps_y = 16e-12;
-  const double sigma_s = 1e-2, sigma_delta = 1e-3;
+  const double Qb = 5e-9, eps_x = 16e-12, eps_y = 16e-12,
+               sigma_s = 1e-2, sigma_delta = 1e-3;
 
   const int    n_cell = 20;
   const double scl    = 0.5;
@@ -43,8 +43,8 @@ void err_and_corr(const string &param_file)
 //    double  sigma_delta_s[globval.Cell_nLoc+1][2];
 
     for(j = 0; j <= globval.Cell_nLoc; j++){
-      sum_delta[j][X_] = 0.0; sum_delta[j][Y_] = 0.0;
-      sum2_delta[j][X_] = 0.0; sum2_delta[j][Y_] = 0.0;
+      sum_delta[j][X_] = 0e0; sum_delta[j][Y_] = 0e0;
+      sum2_delta[j][X_] = 0e0; sum2_delta[j][Y_] = 0e0;
     }
  
     Touschek(Qb, globval.delta_RF, false,

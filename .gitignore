@@ -25,4 +25,5 @@ config/
 *.ps
 *.eps
 *.pdf
+*.png
 *.log
