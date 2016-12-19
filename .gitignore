@@ -25,4 +25,4 @@ config/
 *.ps
 *.eps
 *.pdf
-log
+*.log

@@ -121,17 +121,12 @@ void get_IBS(const int n, const double ds, const double Qb, const double eps[])
 
 int main(int argc, char *argv[])
 {
-  int           qf, qd, sf, sd, j;
-  double        b2[2], a2, b3[2], a3;
-  ss_vect<tps>  map;
-
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
   const double Qb   = 5e-9, sigma_s = 1e-2, sigma_delta = 1e-3;
-  const double nu[] = {101.9/20.0, 27.6/20.0};
 
   if (true)
     Read_Lattice(argv[1]);

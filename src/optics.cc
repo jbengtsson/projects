@@ -75,8 +75,7 @@ int main(int argc, char *argv[])
   prtmfile("flat_file.dat");
 
   if (false) {
-    globval.Cavity_on = true; n_track = 512;
-    n_aper = 25;
-    get_dynap(delta, true);
+    globval.Cavity_on = true;
+    get_dynap(delta, 25, 512, true);
   }
 }
