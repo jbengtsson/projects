@@ -12,8 +12,8 @@ void err_and_corr(const string &param_file)
   orb_corr_type   orb_corr[2];
   FILE            *fp;
 
-  const double Qb = 0.06e-9, eps_x = 2.0e-9, eps_y = 0.01e-9;
-  const double sigma_s = 3.4e-3, sigma_delta = 0.52e-3;
+  const double Qb = 5e-9, eps_x = 16e-12, eps_y = 16e-12;
+  const double sigma_s = 1e-2, sigma_delta = 1e-3;
 
   const string file_name = "mom_aper.out";
 
@@ -23,7 +23,7 @@ void err_and_corr(const string &param_file)
 
   globval.Cavity_on = true;
 
- Touschek(Qb, globval.delta_RF, eps_x, eps_y, sigma_delta, sigma_s);
+  Touschek(Qb, globval.delta_RF, eps_x, eps_y, sigma_delta, sigma_s);
       
   double  sum_delta[globval.Cell_nLoc+1][2];
   double  sum2_delta[globval.Cell_nLoc+1][2];
@@ -37,7 +37,7 @@ void err_and_corr(const string &param_file)
  
   Touschek(Qb, globval.delta_RF, false,
 	   eps_x, eps_y, sigma_delta, sigma_s,
-	   n_track, false, sum_delta, sum2_delta);
+	   params.n_track_DA, false, sum_delta, sum2_delta);
 
   fp = file_write((file_name).c_str()); 
   for(j = 0; j <= globval.Cell_nLoc; j++)
