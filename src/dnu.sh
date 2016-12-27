@@ -2,8 +2,8 @@
 
 DIR=$HOME/git_repos/projects/src
 
-$DIR/dnu      flat_file.dat &
-$DIR/ptc/fmap flat_file.dat 1 &
-$DIR/ptc/fmap flat_file.dat 2 &
+nohup $DIR/dnu      flat_file.dat &
+nohup $DIR/ptc/fmap flat_file.dat 1 &
+nohup $DIR/ptc/fmap flat_file.dat 2 &
 
 wait
