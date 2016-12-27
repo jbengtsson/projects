@@ -8,6 +8,7 @@ int no_tps = NO;
 void err_and_corr(const string &param_file)
 {
   bool            cod = false;
+  long int        lastpos;
   int             j;
   param_data_type params;
   orb_corr_type   orb_corr[2];
@@ -27,7 +28,10 @@ void err_and_corr(const string &param_file)
 
   if (params.fe_file != "") params.LoadFieldErr(false, 1e0, true);
 
-  if (params.ae_file != "") cod = params.cod_corr(n_cell, scl, 1, orb_corr);
+  if (params.ae_file != "")
+    cod = params.cod_corr(n_cell, scl, 1, orb_corr);
+  else
+    cod = getcod(0e0, lastpos);
 
   if (cod) {
     printf("\nerr_and_corr: orbit correction completed\n");
