@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const double delta = 3e-2;
-  const double nu[] = {101.2/20.0, 27.32/20.0};
+  const double nu[] = {101.65/20.0, 27.4/20.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -51,14 +51,14 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    qf = ElemIndex("qf"); qd = ElemIndex("bh");
+    qf = ElemIndex("qfe"); qd = ElemIndex("qde");
     FitTune(qf, qd, nu[X_], nu[Y_]);
     get_bn_design_elem(qf, 1, Quad, b2[0], a2);
     get_bn_design_elem(qd, 1, Quad, b2[1], a2);
 
     printf("\nnu_x = %8.5f nu_y = %8.5f\n",
 	   globval.TotalTune[X_], globval.TotalTune[Y_]);
-    printf("  qf = %8.5f  bh = %8.5f\n", b2[0], b2[1]);
+    printf("  qfe = %8.5f  qde = %8.5f\n", b2[0], b2[1]);
 
     Ring_GetTwiss(true, 0.0); printglob();
   }
