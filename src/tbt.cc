@@ -22,15 +22,15 @@ int no_tps = NO;
 #include <string>
 #include <vector>
 
+#include "num_rec.h"
+
+using namespace std;
+
+
 void Read_Lattice(const char *fic);
 
 // Ctopy hints:
 // $ctopy class lin_opt_data
-
-#include "num_rec.h"
-
-
-using namespace std;
 
 #define sqr(x) ((x)*(x))
 
@@ -44,21 +44,15 @@ typedef double ss_vect[ss_dim];
 
 const int n_bpm_max = 100;
 
-double data[n_bpm_max][2][2048];
-double twoJ[n_bpm_max][2][2048], phi[n_bpm_max][2][2048];
-double phi0[n_bpm_max][2][2048];
-
 
 struct bpm_data_type {
   public:
     std::vector <std::string>bpm_name;
     int n_bpm, n_turn;
-    // One set for each BPM.
-     std::vector < double >bpm_data[2][2048];
+    std::vector< std::vector<double> > bpm_data[2];
 
     void rd_tbt(const char *file_name);
 };
-
 
 struct lin_opt_type {
   public:
@@ -67,48 +61,144 @@ struct lin_opt_type {
     void rd_data(const string & file_name);
 };
 
-
 struct est_lin_opt_type {
   public:
     int n_stats;
     double alpha_mean[2], alpha_sigma[2], tune_mean[2], tune_sigma[2];
-    // One [x, y] pair for each BPM.
-     std::vector < double >beta[2],
-	beta_sum[2], beta_sum2[2], beta_mean[2], beta_sigma[2],
+     std::vector < double >
+        beta[2], beta_sum[2], beta_sum2[2], beta_mean[2], beta_sigma[2],
 	nu[2], dnu_sum[2], dnu_sum2[2], dnu_mean[2], dnu_sigma[2];
 
-    // One set for each BPM.
-    // twoJ[2][2048], phi[2][2048], phi0[2][2048];
+    std::vector< std::vector<double> > twoJ[2], phi[2], phi0[2];
 
     void zero(const int n);
     void get_stats(const bpm_data_type &bpm_data, const lin_opt_type & lin_opt);
 };
 
 
-void est_lin_opt_type::zero(const int n)
+void get_bpm_name(char *name)
 {
+    int k;
+
+    k = 0;
+    do {
+	if (name[k] == '-')
+	    name[k] = '_';
+	else
+	    name[k] = tolower(name[k]);
+	k++;
+    } while (name[k] != '\0');
+}
+
+
+void bpm_data_type::rd_tbt(const char *file_name)
+{
+    const int str_len = 1500;
+
+    char line[str_len], str[80];
     int j, k;
+    ifstream inf;
+
+    const bool prt = false;
+    const int n_print = 8;
+
+    inf.open(file_name);
+
+    inf.getline(line, str_len);
+    inf.getline(line, str_len);
+    sscanf(line, "%d %d", &n_bpm, &n_turn);
+    cout << "\nno of BPMs = " << n_bpm << ", no of turns = " << n_turn << "\n";
 
     for (k = 0; k < 2; k++) {
-	beta[k].resize(n);
-	beta_sum[k].resize(n);
-	beta_sum2[k].resize(n);
-	beta_mean[k].resize(n);
-	beta_sigma[k].resize(n);
-	nu[k].resize(n);
-	dnu_sum[k].resize(n);
-	dnu_sum2[k].resize(n);
-	dnu_mean[k].resize(n);
-	dnu_sigma[k].resize(n);
+      bpm_data[k].resize(n_bpm);
+      for (j = 0; j < n_bpm; j++)
+	bpm_data[k][j].resize(n_turn);
     }
 
-    for (j = 0; j < (int) beta_sum[X_].size(); j++)
-	for (k = 0; k < 2; k++) {
-	    beta_sum[k][j] = 0e0;
-	    beta_sum2[k][j] = 0e0;
-	    dnu_sum[k][j] = 0e0;
-	    dnu_sum2[k][j] = 0e0;
+    inf.getline(line, str_len);
+
+    if (prt)
+	cout << "\n";
+    for (j = 0; j < n_bpm; j++) {
+	inf.getline(line, str_len);
+	sscanf(line, "%s", str);
+	get_bpm_name(str);
+	bpm_name.push_back(str);
+	if (prt) {
+	    cout << " " << bpm_name[j];
+	    if ((j + 1) % n_print == 0)
+		cout << "\n";
 	}
+    }
+    if (prt && (n_bpm % n_print != 0))
+	cout << "\n";
+
+    inf.getline(line, str_len);
+
+    if (prt)
+	cout << "\n";
+    for (k = 0; k < n_turn; k++) {
+	if (prt)
+	    cout << "\n";
+	inf.getline(line, str_len);
+	for (j = 0; j < n_bpm - 1; j++) {
+	    if (j == 0)
+		bpm_data[X_][j][k] = 1e-3 * atof(strtok(line, " "));
+	    else
+		bpm_data[X_][j][k] = 1e-3 * atof(strtok(NULL, " "));
+
+	    if (prt) {
+		cout << fixed << setprecision(6) << setw(10) << 1e3 *
+		    bpm_data[X_][j][k];
+		if ((j + 1) % n_print == 0)
+		    cout << "\n";
+	    }
+	}
+	j = n_bpm - 1;
+	inf.getline(line, str_len);
+	bpm_data[X_][j][k] = 1e-3 * atof(strtok(line, " "));
+	if (prt) {
+	    cout << fixed << setprecision(6)
+		 << setw(10) << 1e3 * bpm_data[X_][j][k];
+	    if (k % n_print != 0)
+		cout << "\n";
+	}
+    }
+
+
+    inf.getline(line, str_len);
+
+    if (prt)
+	cout << "\n";
+    for (k = 0; k < n_turn; k++) {
+	if (prt)
+	    cout << "\n";
+	inf.getline(line, str_len);
+	for (j = 0; j < n_bpm - 1; j++) {
+	    if (j == 0)
+		bpm_data[Y_][j][k] = 1e-3 * atof(strtok(line, " "));
+	    else
+		bpm_data[Y_][j][k] = 1e-3 * atof(strtok(NULL, " "));
+
+	    if (prt) {
+		cout << fixed << setprecision(6)
+		     << setw(10) << 1e3 * bpm_data[Y_][j][k];
+		if ((j + 1) % n_print == 0)
+		    cout << "\n";
+	    }
+	}
+	j = n_bpm - 1;
+	inf.getline(line, str_len);
+	bpm_data[Y_][j][k] = 1e-3 * atof(strtok(line, " "));
+	if (prt) {
+	    cout << fixed << setprecision(6) << setw(10) << 1e3 *
+		bpm_data[Y_][j][k];
+	    if (k % n_print != 0)
+		cout << "\n";
+	}
+    }
+
+    inf.close();
 }
 
 
@@ -163,126 +253,30 @@ void lin_opt_type::rd_data(const string & file_name)
 }
 
 
-void get_bpm_name(char *name)
+void est_lin_opt_type::zero(const int n)
 {
-    int k;
-
-    k = 0;
-    do {
-	if (name[k] == '-')
-	    name[k] = '_';
-	else
-	    name[k] = tolower(name[k]);
-	k++;
-    } while (name[k] != '\0');
-
-}
-
-
-void bpm_data_type::rd_tbt(const char *file_name)
-{
-    const int str_len = 1500;
-
-    char line[str_len], str[80];
     int j, k;
-    ifstream inf;
 
-    const bool prt = false;
-    const int n_print = 8;
-
-    inf.open(file_name);
-
-    inf.getline(line, str_len);
-    inf.getline(line, str_len);
-    sscanf(line, "%d %d", &n_bpm, &n_turn);
-
-    cout << "\nno of BPMs = " << n_bpm << ", no of turns = " << n_turn
-	 << "\n";
-
-    inf.getline(line, str_len);
-
-    if (prt)
-	cout << "\n";
-    for (j = 0; j < n_bpm; j++) {
-	inf.getline(line, str_len);
-	sscanf(line, "%s", str);
-	get_bpm_name(str);
-	bpm_name.push_back(str);
-	if (prt) {
-	    cout << " " << bpm_name[j];
-	    if ((j + 1) % n_print == 0)
-		cout << "\n";
-	}
-    }
-    if (prt && (n_bpm % n_print != 0))
-	cout << "\n";
-
-    inf.getline(line, str_len);
-
-    if (prt)
-	cout << "\n";
-    for (k = 0; k < n_turn; k++) {
-	if (prt)
-	    cout << "\n";
-	inf.getline(line, str_len);
-	for (j = 0; j < n_bpm - 1; j++) {
-	    if (j == 0)
-		data[j][X_][k] = 1e-3 * atof(strtok(line, " "));
-	    else
-		data[j][X_][k] = 1e-3 * atof(strtok(NULL, " "));
-
-	    if (prt) {
-		cout << fixed << setprecision(6) << setw(10) << 1e3 *
-		    data[j][X_][k];
-		if ((j + 1) % n_print == 0)
-		    cout << "\n";
-	    }
-	}
-	j = n_bpm - 1;
-	inf.getline(line, str_len);
-	data[j][X_][k] = 1e-3 * atof(strtok(line, " "));
-	if (prt) {
-	    cout << fixed << setprecision(6) << setw(10) << 1e3 *
-		data[j][X_][k];
-	    if (k % n_print != 0)
-		cout << "\n";
-	}
+    for (k = 0; k < 2; k++) {
+	beta[k].resize(n);
+	beta_sum[k].resize(n);
+	beta_sum2[k].resize(n);
+	beta_mean[k].resize(n);
+	beta_sigma[k].resize(n);
+	nu[k].resize(n);
+	dnu_sum[k].resize(n);
+	dnu_sum2[k].resize(n);
+	dnu_mean[k].resize(n);
+	dnu_sigma[k].resize(n);
     }
 
-
-    inf.getline(line, str_len);
-
-    if (prt)
-	cout << "\n";
-    for (k = 0; k < n_turn; k++) {
-	if (prt)
-	    cout << "\n";
-	inf.getline(line, str_len);
-	for (j = 0; j < n_bpm - 1; j++) {
-	    if (j == 0)
-		data[j][Y_][k] = 1e-3 * atof(strtok(line, " "));
-	    else
-		data[j][Y_][k] = 1e-3 * atof(strtok(NULL, " "));
-
-	    if (prt) {
-		cout << fixed << setprecision(6) << setw(10) << 1e3 *
-		    data[j][Y_][k];
-		if ((j + 1) % n_print == 0)
-		    cout << "\n";
-	    }
+    for (j = 0; j < (int) beta_sum[X_].size(); j++)
+	for (k = 0; k < 2; k++) {
+	    beta_sum[k][j] = 0e0;
+	    beta_sum2[k][j] = 0e0;
+	    dnu_sum[k][j] = 0e0;
+	    dnu_sum2[k][j] = 0e0;
 	}
-	j = n_bpm - 1;
-	inf.getline(line, str_len);
-	data[j][Y_][k] = 1e-3 * atof(strtok(line, " "));
-	if (prt) {
-	    cout << fixed << setprecision(6) << setw(10) << 1e3 *
-		data[j][Y_][k];
-	    if (k % n_print != 0)
-		cout << "\n";
-	}
-    }
-
-    inf.close();
 }
 
 
@@ -620,7 +614,7 @@ void get_nus(ofstream &outf, const int cut, const int n, const int window,
 
 	for (j = 0; j < 2; j++) {
 	    for (k = cut; k < n + cut; k++)
-		x[k - cut] = data[i][j][k];
+		x[k - cut] = bpm_data.bpm_data[j][i][k];
 
 	    rm_mean1(n, x);
 
@@ -843,8 +837,8 @@ void est_lin_opt_type::get_stats(const bpm_data_type &bpm_data,
 
 
 void
-prt_FFT(const int n, const int cut, const double x[],
-	const double y[], const int window)
+prt_FFT(const int n, const int cut, const std::vector<double> &x,
+	const std::vector<double> &y, const int window)
 {
     int j, k;
     double A[2][n], phi[2][n], x1[2][n];
@@ -921,8 +915,8 @@ void ss_est(const int n, const int bpm1, const int bpm2,
 
     for (j = 0; j < n; j++)
 	for (k = 0; k < 2; k++) {
-	    ps1[k][j] = data[bpm1 - 1][k][j];
-	    ps2[k][j] = data[bpm2 - 1][k][j];
+	    ps1[k][j] = bpm_data.bpm_data[k][bpm1 - 1][j];
+	    ps2[k][j] = bpm_data.bpm_data[k][bpm2 - 1][j];
 	}
 
     get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu);
@@ -1037,7 +1031,8 @@ int main(int argc, char *argv[])
 
     bpm_data.rd_tbt("sls_tbt/tbt_090513_215959.log");
 
-    prt_FFT(n_turn, cut, data[bpm1 - 1][X_], data[bpm1 - 1][Y_], window);
+    prt_FFT(n_turn, cut, bpm_data.bpm_data[X_][bpm1 - 1],
+	    bpm_data.bpm_data[Y_][bpm1 - 1], window);
 
     // Linear optics.
     window = 2;
