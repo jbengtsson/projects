@@ -36,7 +36,7 @@ using namespace std;
 
 enum spatial_index { X_ = 0, Y_ = 1, Z_ = 2 };
 
-const int max_str = 132, ss_dim = 6;
+const int ss_dim = 6;
 
 typedef double ss_vect[ss_dim];
 
@@ -44,18 +44,15 @@ typedef double ss_vect[ss_dim];
 
 const int n_bpm_max = 100;
 
-int n_stats;
 double data[n_bpm_max][2][2048];
 double twoJ[n_bpm_max][2][2048], phi[n_bpm_max][2][2048];
 double phi0[n_bpm_max][2][2048];
-
-ofstream outf_optics;
 
 
 struct bpm_data_type {
   public:
     std::vector <std::string>bpm_name;
-    int n_bpm, n_turn, n_stats;
+    int n_bpm, n_turn;
     // One set for each BPM.
      std::vector < double >bpm_data[2][2048];
 
@@ -73,7 +70,7 @@ struct lin_opt_type {
 
 struct est_lin_opt_type {
   public:
-    int nturn, n_stats;
+    int n_stats;
     double alpha_mean[2], alpha_sigma[2], tune_mean[2], tune_sigma[2];
     // One [x, y] pair for each BPM.
      std::vector < double >beta[2],
@@ -84,6 +81,7 @@ struct est_lin_opt_type {
     // twoJ[2][2048], phi[2][2048], phi0[2][2048];
 
     void zero(const int n);
+    void get_stats(const bpm_data_type &bpm_data, const lin_opt_type & lin_opt);
 };
 
 
@@ -587,14 +585,15 @@ void rm_mean1(long int n, double x[])
 }
 
 
-void get_nus(const int cut, const int n, const int window,
+void get_nus(ofstream &outf, const int cut, const int n, const int window,
 	     const bpm_data_type &bpm_data, const lin_opt_type & lin_opt,
 	     est_lin_opt_type & est_lin_opt)
 {
     long int loc;
     int i, j, k;
     double x[n], tunes[bpm_data.n_bpm][2], alpha[2], delta[2];
-    double twoJ, beta, As[bpm_data.n_bpm][2], phis[bpm_data.n_bpm][2], nus[bpm_data.n_bpm][2], dnu[2];
+    double twoJ, beta, As[bpm_data.n_bpm][2], phis[bpm_data.n_bpm][2];
+    double nus[bpm_data.n_bpm][2], dnu[2];
     double tune_sum[2], tune_sum2[2];
     double alpha_sum[2], alpha_sum2[2];
     double twoJ_sum[2], twoJ_sum2[2], twoJ_mean[2], twoJ_sigma[2];
@@ -660,13 +659,13 @@ void get_nus(const int cut, const int n, const int window,
     for (j = 0; j < 2; j++) {
 	twoJ_mean[j] = twoJ_sum[j] / bpm_data.n_bpm;
 	twoJ_sigma[j] =
-	    sqrt((bpm_data.n_bpm * twoJ_sum2[j] -
-		  sqr(twoJ_sum[j])) / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
+	    sqrt((bpm_data.n_bpm * twoJ_sum2[j] -  sqr(twoJ_sum[j]))
+		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
 
 	phi0_mean[j] = phi0_sum[j] / bpm_data.n_bpm;
 	phi0_sigma[j] =
-	    sqrt((bpm_data.n_bpm * phi0_sum2[j] -
-		  sqr(phi0_sum[j])) / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
+	    sqrt((bpm_data.n_bpm * phi0_sum2[j] - sqr(phi0_sum[j]))
+		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
     }
 
     cout << scientific << setprecision(3)
@@ -707,8 +706,7 @@ void get_nus(const int cut, const int n, const int window,
 	    est_lin_opt.dnu_sum2[j][i] += sqr(dnu[j]);
 	}
 
-	outf_optics << fixed
-	    << setw(4) << i + 1
+	outf << fixed << setw(4) << i + 1
 	    << setprecision(3) << setw(8) << lin_opt.s[loc]
 	    << setprecision(5) << setw(9) << dnu[X_]
 	    << setw(9) << dnu[Y_] << "\n";
@@ -732,13 +730,13 @@ void get_nus(const int cut, const int n, const int window,
 	if (sgn[j] < 0)
 	    est_lin_opt.tune_mean[j] = 1e0 - est_lin_opt.tune_mean[j];
 	est_lin_opt.tune_sigma[j] =
-	    sqrt((bpm_data.n_bpm * tune_sum2[j] -
-		  sqr(tune_sum[j])) / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
+	    sqrt((bpm_data.n_bpm * tune_sum2[j] - sqr(tune_sum[j]))
+		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
 
 	est_lin_opt.alpha_mean[j] = alpha_sum[j] / bpm_data.n_bpm;
 	est_lin_opt.alpha_sigma[j] =
-	    sqrt((bpm_data.n_bpm * alpha_sum2[j] -
-		  sqr(alpha_sum[j])) / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
+	    sqrt((bpm_data.n_bpm * alpha_sum2[j] - sqr(alpha_sum[j]))
+		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)));
     }
 
     cout << fixed << setprecision(6)
@@ -766,8 +764,8 @@ void get_m_s(const int n, const double sum, const double sum2,
 }
 
 
-void get_stats(const bpm_data_type &bpm_data, const lin_opt_type & lin_opt,
-	       est_lin_opt_type & est_lin_opt)
+void est_lin_opt_type::get_stats(const bpm_data_type &bpm_data,
+				 const lin_opt_type & lin_opt)
 {
     long int loc;
     int j, k;
@@ -782,27 +780,23 @@ void get_stats(const bpm_data_type &bpm_data, const lin_opt_type & lin_opt,
 	    << "nu                              dnu\n";
     for (j = 0; j < bpm_data.n_bpm; j++) {
 	for (k = 0; k < 2; k++) {
-  	    get_m_s(n_stats, est_lin_opt.beta_sum[k][j],
-		    est_lin_opt.beta_sum2[k][j],
-		    est_lin_opt.beta_mean[k][j],
-		    est_lin_opt.beta_sigma[k][j]);
-	    get_m_s(n_stats, est_lin_opt.dnu_sum[k][j],
-		    est_lin_opt.dnu_sum2[k][j],
-		    est_lin_opt.dnu_mean[k][j],
-		    est_lin_opt.dnu_sigma[k][j]);
+  	    get_m_s(n_stats, beta_sum[k][j], beta_sum2[k][j], beta_mean[k][j],
+		    beta_sigma[k][j]);
+	    get_m_s(n_stats, dnu_sum[k][j], dnu_sum2[k][j], dnu_mean[k][j],
+		    dnu_sigma[k][j]);
 	}
 
 	if (prt)
 	    cout << fixed << setprecision(3)
-		<< setw(3) << j + 1 << "  ["
-		<< setw(5) << est_lin_opt.beta_mean[j][X_] << "+/-"
-		<< setw(5) << est_lin_opt.beta_sigma[j][X_] << ", "
-		<< setw(4) << est_lin_opt.beta_mean[j][Y_] << "+/-"
-		<< setw(5) << est_lin_opt.beta_sigma[j][Y_] << "]  ["
-		<< setw(5) << est_lin_opt.dnu_mean[j][X_] << "+/-"
-		<< setw(5) << est_lin_opt.dnu_sigma[j][X_] << ", "
-		<< setw(4) << est_lin_opt.dnu_mean[j][Y_] << "+/-"
-		<< setw(4) << est_lin_opt.dnu_sigma[j][Y_] << "]\n";
+		 << setw(3) << j + 1 << "  ["
+		 << setw(5) << beta_mean[j][X_] << "+/-"
+		 << setw(5) << beta_sigma[j][X_] << ", "
+		 << setw(4) << beta_mean[j][Y_] << "+/-"
+		 << setw(5) << beta_sigma[j][Y_] << "]  ["
+		 << setw(5) << dnu_mean[j][X_] << "+/-"
+		 << setw(5) << dnu_sigma[j][X_] << ", "
+		 << setw(4) << dnu_mean[j][Y_] << "+/-"
+		 << setw(4) << dnu_sigma[j][Y_] << "]\n";
     }
 
     outf.open("tbt.out");
@@ -812,34 +806,34 @@ void get_stats(const bpm_data_type &bpm_data, const lin_opt_type & lin_opt,
     for (j = 0; j < bpm_data.n_bpm; j++) {
 	loc = Elem_GetPos(ElemIndex(bpm_data.bpm_name[j].c_str()), 1);
 	for (k = 0; k < 2; k++) {
-	    // dbeta[k] = est_lin_opt.beta_mean[k][j] - lin_opt.beta[k][loc];
-	    dbeta[k] = est_lin_opt.beta_mean[k][j];
-	    if (est_lin_opt.beta_sigma[k][j] > dbeta_max) {
+	    // dbeta[k] = beta_mean[k][j] - lin_opt.beta[k][loc];
+	    dbeta[k] = beta_mean[k][j];
+	    if (beta_sigma[k][j] > dbeta_max) {
 		dbeta[k] = 0e0;
-		est_lin_opt.beta_sigma[k][j] = 0e0;
+		beta_sigma[k][j] = 0e0;
 	    }
 
 	    dnu[k] =
-		est_lin_opt.dnu_mean[k][j] - (lin_opt.nu[k][loc] -
+		dnu_mean[k][j] - (lin_opt.nu[k][loc] -
 					      (int) lin_opt.nu[k][loc]);
-	    if (est_lin_opt.dnu_sigma[k][j] > dnu_max) {
+	    if (dnu_sigma[k][j] > dnu_max) {
 		cout << "\nBPM # " << j << " excluded, plane = " << k
 		     << "\n";
 		dnu[k] = 0e0;
-		est_lin_opt.dnu_sigma[k][j] = 0e0;
+		dnu_sigma[k][j] = 0e0;
 	    }
 	}
 
 	outf << fixed << setprecision(3)
 	    << setw(4) << j + 1 << setw(8) << lin_opt.s[loc]
 	    << setw(8) << dbeta[X_] << " +/- "
-	    << setw(5) << est_lin_opt.beta_sigma[X_][j]
+	    << setw(5) << beta_sigma[X_][j]
 	    << setw(8) << dbeta[Y_] << " +/- "
-	    << setw(5) << est_lin_opt.beta_sigma[Y_][j]
-	    << setw(7) << est_lin_opt.dnu_mean[X_][j] << " +/- "
-	    << setw(5) << est_lin_opt.dnu_sigma[X_][j]
-	    << setw(7) << est_lin_opt.dnu_mean[Y_][j] << " +/- "
-	    << setw(5) << est_lin_opt.dnu_sigma[Y_][j]
+	    << setw(5) << beta_sigma[Y_][j]
+	    << setw(7) << dnu_mean[X_][j] << " +/- "
+	    << setw(5) << dnu_sigma[X_][j]
+	    << setw(7) << dnu_mean[Y_][j] << " +/- "
+	    << setw(5) << dnu_sigma[Y_][j]
 	    << setw(8) << lin_opt.beta[X_][loc]
 	    << setw(8) << lin_opt.beta[Y_][loc] << "\n";
     }
@@ -1026,6 +1020,7 @@ int main(int argc, char *argv[])
     bpm_data_type bpm_data;
     lin_opt_type lin_opt;
     est_lin_opt_type est_lin_opt;
+    ofstream outf;
 
     const string file_name = "linlat_maxlab.out";
 
@@ -1051,23 +1046,23 @@ int main(int argc, char *argv[])
 
     est_lin_opt.zero(lin_opt.beta[X_].size());
 
-    outf_optics.open("tbt_optics.out");
+    outf.open("tbt_optics.out");
 
-    n_stats = 1;
+    est_lin_opt.n_stats = 1;
     bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log");
-    get_nus(cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
+    get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
 
-    n_stats += 1;
+    est_lin_opt.n_stats += 1;
     bpm_data.rd_tbt("sls_tbt/tbt_090513_215631.log");
-    get_nus(cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
+    get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
 
-    n_stats += 1;
+    est_lin_opt.n_stats += 1;
     bpm_data.rd_tbt("sls_tbt/tbt_090513_215652.log");
-    get_nus(cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
+    get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt);
 
-    outf_optics.close();
+    outf.close();
 
-    get_stats(bpm_data, lin_opt, est_lin_opt);
+    est_lin_opt.get_stats(bpm_data, lin_opt);
 
     // Phase space.
     n_turn = 2048;
