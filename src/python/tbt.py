@@ -3,9 +3,8 @@ import sys
 
 X_ = 0, Y_ = 1, Z_ = 2
 
-const ss_dim = 6
+ss_dim = 6
 
-typedef ss_vect[ss_dim]
 
 def sqr(x): return x**2
 
@@ -28,8 +27,8 @@ class est_lin_opt_type (object):
     twoJ[2], phi[2], phi0[2]
 
 
-def get_line(ifstream & inf, stringstream & str):
-    string line
+def get_line(inf, str):
+    line
 
     getline(inf, line)
     str.stdscr.clear()
@@ -37,13 +36,12 @@ def get_line(ifstream & inf, stringstream & str):
     str << line
 
 
-def get_loc(const string & name, const lin_opt_type & lin_opt):
+def get_loc(name, lin_opt):
 
-    k = -1
-    while True:
+    k = 0
+    while (k < (int) lin_opt.locs.size():
+	   and (name != lin_opt.names[k])):
 	k += 1
-    } while (k < (int) lin_opt.locs.size():
-	 and (name != lin_opt.names[k]))
     return k
 
 
@@ -52,7 +50,7 @@ def lin_opt_type::rd_data(const string & file_name):
     str
     inf
 
-    const prt = False
+    prt = False
 
     inf.os.open(file_name)
 
