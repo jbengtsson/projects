@@ -23,9 +23,6 @@ extern "C" {
     void dfour1(double data[], unsigned long nn, int isign);
 }
 
-// Ctopy hints:
-// $ctopy class lin_opt_data
-
 #define sqr(x) ((x)*(x))
 
 enum spatial_index { X_ = 0, Y_ = 1, Z_ = 2 };
