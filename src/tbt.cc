@@ -1,11 +1,3 @@
-#if 1
-
-#define NO 1
-#include "tracy_lib.h"
-int no_tps = NO;
-
-#else
-
 #include <stdio.h>
 #include <stddef.h>
 #include <string.h>
@@ -23,12 +15,13 @@ int no_tps = NO;
 #include <string>
 #include <vector>
 
-#include "num_rec.h"
-
 using namespace std;
 
-
-void Read_Lattice(const char *fic);
+extern "C" {
+    double *dvector(long nl, long nh);
+    void free_dvector(double *v, long nl, long nh);
+    void dfour1(double data[], unsigned long nn, int isign);
+}
 
 // Ctopy hints:
 // $ctopy class lin_opt_data
@@ -40,8 +33,6 @@ enum spatial_index { X_ = 0, Y_ = 1, Z_ = 2 };
 const int ss_dim = 6;
 
 typedef double ss_vect[ss_dim];
-
-#endif
 
 
 struct lin_opt_type {
@@ -628,7 +619,7 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
 
     printf("\n");
     for (i = 0; i < bpm_data.n_bpm; i++) {
-	loc = Elem_GetPos(ElemIndex(bpm_data.names[i].c_str()), 1);
+	loc = bpm_data.locs[i];
 
 	for (j = 0; j < 2; j++) {
 	    for (k = cut; k < n + cut; k++)
@@ -695,7 +686,7 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
     if (prt)
 	cout << "\n bpm        A               nu            nu (model)\n";
     for (i = 0; i < bpm_data.n_bpm; i++) {
-	loc = Elem_GetPos(ElemIndex(bpm_data.names[i].c_str()), 1);
+	loc = bpm_data.locs[i];
 
 	for (j = 0; j < 2; j++) {
 	    beta = sqr(As[i][j]) / twoJ_mean[j];
@@ -817,7 +808,7 @@ void est_lin_opt_type::get_stats(const bpm_data_type & bpm_data,
     outf << "\n# bpm  s [m]                 beta [m]"
 	"                           nu\n";
     for (j = 0; j < bpm_data.n_bpm; j++) {
-	loc = Elem_GetPos(ElemIndex(bpm_data.names[j].c_str()), 1);
+	loc = bpm_data.locs[j];
 	for (k = 0; k < 2; k++) {
 	    // dbeta[k] = beta_mean[k][j] - lin_opt.beta[k][loc];
 	    dbeta[k] = beta_mean[k][j];
@@ -892,8 +883,8 @@ prt_FFT(const int n, const int cut, const std::vector < double >&x,
 
 
 void
-get_b1ob2_dnu(const int n, const ss_vect < double >ps1[],
-	      const ss_vect < double >ps2[], double b1ob2[], double dnu[])
+get_b1ob2_dnu(const int n, const ss_vect ps1[],
+	      const ss_vect ps2[], double b1ob2[], double dnu[])
 {
     // Estimate beta_1/beta_2 and Dnu by tracking data from two adjacent
     // BPMs.
@@ -931,7 +922,7 @@ void ss_est(const int n, const int bpm1, const int bpm2,
     long int loc1, loc2;
     int j, k;
     double b1ob2[2], dnu[2];
-    ss_vect < double >ps1[n], ps2[n];
+    ss_vect ps1[n], ps2[n];
 
     for (j = 0; j < n; j++)
 	for (k = 0; k < 2; k++) {
@@ -941,8 +932,8 @@ void ss_est(const int n, const int bpm1, const int bpm2,
 
     get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu);
 
-    loc1 = Elem_GetPos(ElemIndex(bpm_data.names[bpm1 - 1].c_str()), 1);
-    loc2 = Elem_GetPos(ElemIndex(bpm_data.names[bpm2 - 1].c_str()), 1);
+    loc1 = bpm_data.locs[bpm1 - 1];
+    loc2 = bpm_data.locs[bpm2 - 1];
 
     cout << "\n";
     cout << scientific << setprecision(3)
@@ -973,61 +964,6 @@ void prt_name(FILE * outf, const char *name)
 }
 
 
-void prt_lat_maxlab(const char *fname, const int Fnum, const bool all)
-{
-    long int i = 0;
-    FILE *outf;
-
-    outf = fopen(fname, "w");
-    fprintf(outf, "#        name               s      type"
-	    "    alphax    betax      nux       etax     etapx");
-    fprintf(outf, "      alphay    betay      nuy      etay      etapy\n");
-    fprintf(outf, "#                          [m]"
-	    "                        [m]                 [m]");
-    fprintf(outf, "                            [m]                [m]\n");
-    fprintf(outf, "#\n");
-
-    for (i = 0; i <= globval.Cell_nLoc; i++) {
-	if (all || (Cell[i].Fnum == Fnum)) {
-	    fprintf(outf, "%4ld, ", i);
-	    prt_name(outf, Cell[i].Elem.PName);
-	    // fprintf(outf, " %9.5f, %4.1f,"
-	    //      " %9.5f, %8.5f, %8.5f, %8.5f, %8.5f,"
-	    //      " %9.5f, %8.5f, %8.5f, %8.5f, %8.5f\n",
-	    //      Cell[i].S, get_code(Cell[i]),
-	    //      Cell[i].Alpha[X_], Cell[i].Beta[X_], Cell[i].Nu[X_],
-	    //      Cell[i].Eta[X_], Cell[i].Etap[X_],
-	    //      Cell[i].Alpha[Y_], Cell[i].Beta[Y_], Cell[i].Nu[Y_],
-	    //      Cell[i].Eta[Y_], Cell[i].Etap[Y_]);
-	}
-    }
-
-    fclose(outf);
-}
-
-
-void tracy_2_part(const string & file_name)
-{
-    // globval.H_exact = false;
-    // globval.quad_fringe = false;
-    // globval.Cavity_on = false;
-    // globval.radiation = false;
-    // globval.emittance = false;
-    // globval.IBS = false;
-    // globval.pathlength = false;
-    // globval.bpm = 0;
-
-    Read_Lattice(file_name.c_str());
-
-    // Ring_GetTwiss(true, 0.0);
-    // printglob();
-
-    // prt_lat("linlat1.out", globval.bpm, true);
-    // prt_lat("linlat.out", globval.bpm, true, 10);
-    // prt_lat_maxlab(file_name.c_str(), globval.bpm, true);
-}
-
-
 int main(int argc, char *argv[])
 {
     int window, cut, n_turn, bpm1, bpm2;
@@ -1039,8 +975,6 @@ int main(int argc, char *argv[])
     const string file_name = "linlat_maxlab.out";
 
     // sls_ri_f6cwo_20.435_8.737_gset7
-    tracy_2_part(argv[1]);
-
     lin_opt.rd_data(file_name);
 
     // T-b-T data.
