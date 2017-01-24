@@ -48,7 +48,7 @@ struct lin_opt_type {
   public:
     std::vector < std::string > names;
     std::vector < int >locs;
-    std::vector < double >s, alpha[2], beta[2], nu[2], eta[2], etap[2];
+     std::vector < double >s, alpha[2], beta[2], nu[2], eta[2], etap[2];
 
     void rd_data(const string & file_name);
 };
@@ -56,11 +56,11 @@ struct lin_opt_type {
 struct bpm_data_type {
   public:
     int n_bpm, n_turn;
-    std::vector < std::string > names;
-    std::vector < int >locs;
-    std::vector < std::vector < double >>data[2];
+     std::vector < std::string > names;
+     std::vector < int >locs;
+     std::vector < std::vector < double >>data[2];
 
-    void rd_tbt(const char *file_name, lin_opt_type &lin_opt);
+    void rd_tbt(const char *file_name, lin_opt_type & lin_opt);
 };
 
 struct est_lin_opt_type {
@@ -90,15 +90,16 @@ void get_line(ifstream & inf, stringstream & str)
 }
 
 
-int get_loc(const string & name, const lin_opt_type &lin_opt)
+int get_loc(const string & name, const lin_opt_type & lin_opt)
 {
-  int k;
+    int k;
 
-  k = -1;
-  do {
-    k++;
-  } while ((k < (int)lin_opt.locs.size()) && (name != lin_opt.names[k]));
-  return k;
+    k = -1;
+    do {
+	k++;
+    } while ((k < (int) lin_opt.locs.size())
+	     && (name != lin_opt.names[k]));
+    return k;
 }
 
 
@@ -130,7 +131,7 @@ void lin_opt_type::rd_data(const string & file_name)
 		>> comma >> eta[X_] >> comma >> etap[X_] >> comma >>
 		alpha[Y_] >> comma >> beta[Y_] >> comma >> nu[Y_] >> comma
 		>> eta[Y_] >> comma >> etap[Y_];
-	    name.erase(name.end()-1);
+	    name.erase(name.end() - 1);
 	    if (prt)
 		printf("%4d, %-15s, %9.5f, %4.1f,"
 		       " %9.5f, %8.5f, %8.5f, %8.5f, %8.5f,"
@@ -138,7 +139,8 @@ void lin_opt_type::rd_data(const string & file_name)
 		       n, name.c_str(), s, type,
 		       alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
 		       alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_]);
-	    this->locs.push_back(n); this->s.push_back(s);
+	    this->locs.push_back(n);
+	    this->s.push_back(s);
 	    this->names.push_back(name);
 	    for (k = 0; k < 2; k++) {
 		this->alpha[k].push_back(alpha[k]);
@@ -154,23 +156,23 @@ void lin_opt_type::rd_data(const string & file_name)
 }
 
 
-void get_bpm_name(string &name)
+void get_bpm_name(string & name)
 {
-  int k;
+    int k;
 
-  k = 0;
-  do {
-    name[k] = (name[k] != '-')? tolower(name[k]) : '_';
-    k++;
-  } while (k < (int)name.size());
+    k = 0;
+    do {
+	name[k] = (name[k] != '-') ? tolower(name[k]) : '_';
+	k++;
+    } while (k < (int) name.size());
 }
 
 
 void rd_bpm_names(ifstream & inf, bpm_data_type * bpm_data,
-		  const lin_opt_type &lin_opt)
+		  const lin_opt_type & lin_opt)
 {
     string line, name;
-    int j, k, loc;
+    int j, k;
     stringstream str;
 
     const bool prt = false;
@@ -199,8 +201,7 @@ void rd_bpm_names(ifstream & inf, bpm_data_type * bpm_data,
 	str >> name;
 	get_bpm_name(name);
 	bpm_data->names.push_back(name);
-	loc = get_loc(name, lin_opt);
-	bpm_data->locs.push_back(loc);
+	bpm_data->locs.push_back(get_loc(name, lin_opt));
 	if (prt) {
 	    cout << " " << bpm_data->names[j];
 	    if ((j + 1) % n_print == 0)
@@ -212,8 +213,7 @@ void rd_bpm_names(ifstream & inf, bpm_data_type * bpm_data,
 }
 
 
-void rd_bpm_data(const int plane, ifstream & inf,
-		  bpm_data_type * bpm_data)
+void rd_bpm_data(const int plane, ifstream & inf, bpm_data_type * bpm_data)
 {
     string line;
     int j, k;
@@ -255,7 +255,7 @@ void rd_bpm_data(const int plane, ifstream & inf,
 }
 
 
-void bpm_data_type::rd_tbt(const char *file_name, lin_opt_type &lin_opt)
+void bpm_data_type::rd_tbt(const char *file_name, lin_opt_type & lin_opt)
 {
     string line;
     stringstream sstr;
