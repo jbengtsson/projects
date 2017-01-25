@@ -1,7 +1,10 @@
 import curses, os, math
 import sys
+import numpy as np
 
-X_ = 0, Y_ = 1, Z_ = 2
+
+# Global constants.
+X_ = 0; Y_ = 1; Z_ = 2
 
 ss_dim = 6
 
@@ -9,97 +12,110 @@ ss_dim = 6
 def sqr(x): return x**2
 
 
+def printf(format, *args):
+    sys.stdout.write(format % args)
+
+
 class lin_opt_type (object):
-    names
-    locs
-    s, alpha[2], beta[2], nu[2], eta[2], etap[2]
+    def __init__(self):
+        self.loc = []
+        self.name = []
+        self.s = np.zeros(1)
+        self.alpha = np.zeros((2, 1))
+        self.beta = np.zeros((2, 1))
+        self.nu = np.zeros((2, 1))
+        self.eta = np.zeros((2, 1))
+        self.etap = np.zeros((2, 1))
+
+    def rd_data(self, file_name):
+        alpha = np.zeros(2); beta = np.zeros(2); nu = np.zeros(2);
+        eta = np.zeros(2); etap = np.zeros(2);
+
+        prt = False
+
+        inf = open(file_name, 'r')
+
+        if prt: printf("\n")
+        for line in inf:
+            # Skip comments; lines starting with "#".
+            if line[0] != '#':
+                [n, name, s, type,
+                 alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
+                 alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_]] \
+                 = line.strip('\n').split(',')
+                n = int(n); s = float(s)
+                for k in range(2):
+                    alpha[k] = float(alpha[k]); beta[k] = float(beta[k]);
+                    nu[k] = float(nu[k]);
+                    eta[k] = float(eta[k]); etap[k] = float(etap[k]);
+                self.locs = np.append(self.loc, n)
+                self.name = np.append(self.name, name)
+                self.s = np.append(self.s, s)
+                self.alpha = np.append(self.alpha, (alpha[X_], alpha[Y_]))
+                self.beta = np.append(self.beta, (beta[X_], beta[Y_]))
+                self.nu = np.append(self.nu, (nu[X_], nu[Y_]))
+                self.eta = np.append(self.eta, (eta[X_], eta[Y_]))
+                self.etap = np.append(self.etap, (etap[X_], etap[Y_]))
+                if prt:
+                    printf('%4d, %-15s, %9.5f,'
+                           ' %9.5f, %8.5f, %8.5f, %8.5f, %8.5f,'
+                           ' %9.5f, %8.5f, %8.5f, %8.5f, %8.5f\n',
+                           n, name, s,
+                           alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
+                           alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_])
+                
+
+        inf.close()
 
 
 class bpm_data_type (object):
-    names
-    locs
-    data[2]
+    def __init__(self):
+        self.name = []
+        self.loc = []
+        self.data = np.zeros((2, 1))
 
 
 class est_lin_opt_type (object):
-    beta[2], beta_sum[2], beta_sum2[2], beta_mean[2], beta_sigma[2]
-    nu[2], dnu_sum[2], dnu_sum2[2], dnu_mean[2], dnu_sigma[2]
-    twoJ[2], phi[2], phi0[2]
-
-
-def get_line(inf, str):
-    line
-
-    getline(inf, line)
-    str.stdscr.clear()
-    str.str("")
-    str << line
+    def __init__(self):
+        self.beta = np.zeros((2, 1))
+        self.beta_sum = np.zeros((2, 1))
+        self.beta_sum2 = np.zeros((2, 1))
+        self.beta_mean = np.zeros((2, 1))
+        self.beta_sigma = np.zeros((2, 1))
+        self.nu = np.zeros((2, 1))
+        self.dnu_sum = np.zeros((2, 1))
+        self.dnu_sum2 = np.zeros((2, 1))
+        self.dnu_mean = np.zeros((2, 1))
+        self.dnu_sigma = np.zeros((2, 1))
+        self.twoJ = np.zeros((2, 1))
+        self.phi = np.zeros((2, 1))
+        self.phi0 = np.zeros((2, 1))
 
 
 def get_loc(name, lin_opt):
-
     k = 0
-    while (k < (int) lin_opt.locs.size():
-	   and (name != lin_opt.names[k])):
+    while k < len(lin_opt.locs and name != lin_opt.names[k]):
 	k += 1
     return k
 
 
-def lin_opt_type::rd_data(const string & file_name):
-    name, line
-    str
-    inf
+lin_opt = lin_opt_type()
 
-    prt = False
+lin_opt.rd_data(
+    '/home/johan/git_repos/projects/src/sls_tbt/linlat_maxlab.out')
 
-    inf.os.open(file_name)
-
-    if prt:
-	printf("\n")
-    while getline(inf, line):
-	# Skip comments; lines starting with "#".
-	if (line.compare(0, 1, "#") != 0) {
-	    str.stdscr.clear()
-	    str.str("")
-	    str << line
-	    if prt:
-		cout << str.str() << "\n"
-	    str >> n >> comma >> name >> s >> comma >> type >>
-		comma >> alpha[X_] >> comma >> beta[X_] >> comma >> nu[X_]
-		>> comma >> eta[X_] >> comma >> etap[X_] >> comma >>
-		alpha[Y_] >> comma >> beta[Y_] >> comma >> nu[Y_] >> comma
-		>> eta[Y_] >> comma >> etap[Y_]
-	    name.stdscr.erase(name.end() - 1)
-	    if prt:
-		printf("%4d, %-15s, %9.5f, %4.1f," \
-		       " %9.5f, %8.5f, %8.5f, %8.5f, %8.5f," \
-		       " %9.5f, %8.5f, %8.5f, %8.5f, %8.5f\n" \
-                       % (n, name.c_str(), s, type,
-		       alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
-		       alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_])
-	    this.locs.push_back(n)
-	    this.s.push_back(s)
-	    this.names.push_back(name)
-	    for k in range(2):
-		this.alpha[k].push_back(alpha[k])
-		this.beta[k].push_back(beta[k])
-		this.nu[k].push_back(nu[k])
-		this.eta[k].push_back(eta[k])
-		this.etap[k].push_back(etap[k])
-
-    inf.os.close()
-
+"""
 
 def get_bpm_name(name):
 
     k = 0
-                       while k < (int) name.size()
+    while (k < len(name.size)):
 	name[k] = (name[k] != '-') ? tolower(name[k]) : '_'
 	k += 1
 
     str
 
-     prt = False
+    prt = False
     const n_print = 8
 
     # Skip 1st line.
@@ -133,7 +149,7 @@ def get_bpm_name(name):
 	cout << "\n"
 
 
-def rd_bpm_data(const plane, ifstream & inf, bpm_data_type * bpm_data):
+def rd_bpm_data(plane, inf, bpm_data):
     string line
     stringstream sstr
 
@@ -168,7 +184,7 @@ def rd_bpm_data(const plane, ifstream & inf, bpm_data_type * bpm_data):
 
 
 
-def bpm_data_type::rd_tbt(const file_name, lin_opt_type & lin_opt):
+def rd_tbt(const file_name, lin_opt_type & lin_opt):
     string line
     stringstream sstr
     ifstream inf
@@ -808,3 +824,5 @@ def main(argc, argv):
     bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt)
 
     ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt)
+
+"""
