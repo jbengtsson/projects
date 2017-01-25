@@ -48,6 +48,8 @@ struct bpm_data_type {
      std::vector < int >locs;
      std::vector < std::vector < double >>data[2];
 
+    void rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt);
+    void rd_bpm_data(const int plane, ifstream & inf);
     void rd_tbt(const char *file_name, lin_opt_type & lin_opt);
 };
 
@@ -156,8 +158,7 @@ void get_bpm_name(string & name)
 }
 
 
-void rd_bpm_names(ifstream & inf, bpm_data_type * bpm_data,
-		  const lin_opt_type & lin_opt)
+void bpm_data_type::rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt)
 {
     string line, name;
     int j, k;
@@ -170,38 +171,38 @@ void rd_bpm_names(ifstream & inf, bpm_data_type * bpm_data,
     getline(inf, line);
     // Read no of BPMs and no of turns.
     get_line(inf, str);
-    str >> bpm_data->n_bpm >> bpm_data->n_turn;
+    str >> n_bpm >> n_turn;
     // Skip 3rd line.
     getline(inf, line);
-    cout << "\nno of BPMs = " << bpm_data->n_bpm
-	<< ", no of turns = " << bpm_data->n_turn << "\n";
+    cout << "\nno of BPMs = " << n_bpm
+	<< ", no of turns = " << n_turn << "\n";
 
     for (k = 0; k < 2; k++) {
-	bpm_data->data[k].resize(bpm_data->n_bpm);
-	for (j = 0; j < bpm_data->n_bpm; j++)
-	    bpm_data->data[k][j].resize(bpm_data->n_turn);
+	data[k].resize(n_bpm);
+	for (j = 0; j < n_bpm; j++)
+	    data[k][j].resize(n_turn);
     }
 
     if (prt)
 	cout << "\n";
-    for (j = 0; j < bpm_data->n_bpm; j++) {
+    for (j = 0; j < n_bpm; j++) {
 	get_line(inf, str);
 	str >> name;
 	get_bpm_name(name);
-	bpm_data->names.push_back(name);
-	bpm_data->locs.push_back(get_loc(name, lin_opt));
+	names.push_back(name);
+	locs.push_back(get_loc(name, lin_opt));
 	if (prt) {
-	    cout << " " << bpm_data->names[j];
+	    cout << " " << names[j];
 	    if ((j + 1) % n_print == 0)
 		cout << "\n";
 	}
     }
-    if (prt && (bpm_data->n_bpm % n_print != 0))
+    if (prt && (n_bpm % n_print != 0))
 	cout << "\n";
 }
 
 
-void rd_bpm_data(const int plane, ifstream & inf, bpm_data_type * bpm_data)
+void bpm_data_type::rd_bpm_data(const int plane, ifstream & inf)
 {
     string line;
     int j, k;
@@ -214,27 +215,27 @@ void rd_bpm_data(const int plane, ifstream & inf, bpm_data_type * bpm_data)
 	cout << "\n";
     // Skip line.
     get_line(inf, sstr);
-    for (k = 0; k < bpm_data->n_turn; k++) {
+    for (k = 0; k < n_turn; k++) {
 	if (prt)
 	    cout << "\n";
 	get_line(inf, sstr);
-	for (j = 0; j < bpm_data->n_bpm - 1; j++) {
-	    sstr >> bpm_data->data[plane][j][k];
-	    bpm_data->data[plane][j][k] *= 1e-3;
+	for (j = 0; j < n_bpm - 1; j++) {
+	    sstr >> data[plane][j][k];
+	    data[plane][j][k] *= 1e-3;
 	    if (prt) {
 		cout << fixed << setprecision(6)
-		    << setw(10) << 1e3 * bpm_data->data[plane][j][k];
+		    << setw(10) << 1e3 * data[plane][j][k];
 		if ((j + 1) % n_print == 0)
 		    cout << "\n";
 	    }
 	}
-	j = bpm_data->n_bpm - 1;
+	j = n_bpm - 1;
 	get_line(inf, sstr);
-	sstr >> bpm_data->data[plane][j][k];
-	bpm_data->data[plane][j][k] *= 1e-3;
+	sstr >> data[plane][j][k];
+	data[plane][j][k] *= 1e-3;
 	if (prt) {
 	    cout << fixed << setprecision(6)
-		<< setw(10) << 1e3 * bpm_data->data[plane][j][k];
+		<< setw(10) << 1e3 * data[plane][j][k];
 	    if (k % n_print != 0)
 		cout << "\n";
 	}
@@ -251,9 +252,9 @@ void bpm_data_type::rd_tbt(const char *file_name, lin_opt_type & lin_opt)
 
     inf.open(file_name);
 
-    rd_bpm_names(inf, this, lin_opt);
-    rd_bpm_data(0, inf, this);
-    rd_bpm_data(1, inf, this);
+    this->rd_bpm_names(inf, lin_opt);
+    this->rd_bpm_data(0, inf);
+    this->rd_bpm_data(1, inf);
 
     inf.close();
 }
