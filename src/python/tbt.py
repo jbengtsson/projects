@@ -1,5 +1,6 @@
 import curses, os, math
 import sys
+import re
 import numpy as np
 
 
@@ -32,12 +33,10 @@ class lin_opt_type (object):
         eta = np.zeros(2); etap = np.zeros(2);
 
         prt = False
-
         inf = open(file_name, 'r')
-
-        if prt: printf("\n")
+        if prt: printf('\n')
         for line in inf:
-            # Skip comments; lines starting with "#".
+            # Skip comments; lines starting with '#'.
             if line[0] != '#':
                 [n, name, s, type,
                  alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
@@ -48,7 +47,7 @@ class lin_opt_type (object):
                     alpha[k] = float(alpha[k]); beta[k] = float(beta[k]);
                     nu[k] = float(nu[k]);
                     eta[k] = float(eta[k]); etap[k] = float(etap[k]);
-                self.locs = np.append(self.loc, n)
+                self.loc.append(n)
                 self.name = np.append(self.name, name)
                 self.s = np.append(self.s, s)
                 self.alpha = np.append(self.alpha, (alpha[X_], alpha[Y_]))
@@ -63,8 +62,6 @@ class lin_opt_type (object):
                            n, name, s,
                            alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
                            alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_])
-                
-
         inf.close()
 
 
@@ -72,7 +69,73 @@ class bpm_data_type (object):
     def __init__(self):
         self.name = []
         self.loc = []
-        self.data = np.zeros((2, 1))
+        self.data = np.zeros((2, 1, 1))
+
+    def get_loc(self, name, lin_opt):
+        k = 0
+        while k < len(lin_opt.loc) and name != lin_opt.name[k]:
+            k += 1
+        return k
+
+    def get_bpm_name(self, name):
+        name = re.sub ('-', '_', name).lower()
+        return name
+
+    def rd_bpm_names(self, inf, lin_opt):
+        prt = False
+        n_print = 8
+        # Skip 1st line.
+        line = inf.readline()
+        # Read no of BPMs and no of turns.
+        [self.n_bpm, self.n_turn] = inf.readline().strip('\n').split()
+        self.n_bpm = int(self.n_bpm)
+        self.n_turn = int(self.n_turn)
+        # Skip 3rd line.
+        line = inf.readline()
+        printf('\nno of BPMs = %d, no of turns = %d \n',
+               self.n_bpm, self.n_turn)
+
+        self.data = np.zeros((2, self.n_bpm, self.n_turn))
+
+        if prt: printf('\n')
+        for j in range(self.n_bpm):
+            name = (inf.readline().strip('\n').split())[0]
+            name = self.get_bpm_name(name)
+            self.name.append(name)
+            self.loc.append(self.get_loc(name, lin_opt))
+            if prt:
+                printf(' %s', self.name[j])
+                if (j+1) % n_print == 0: printf('\n')
+        if prt and (self.n_bpm % n_print != 0): printf('\n')
+
+    def rd_bpm_data(self, plane, inf):
+        prt = True
+        n_print = 8
+        if prt: printf('\n')
+        # Skip line.
+        line = inf.readline()
+        for k in range(self.n_turn):
+            if prt: print('\n')
+            data = inf.readline().strip('\n').split()
+            for j in range(self.n_bpm-1):
+                self.data[plane][j][k] = 1e-3*float(data[j])
+                if prt:
+                    printf('%10.6f', 1e3*self.data[plane][j][k])
+                    if (j+1) % n_print == 0: printf('\n')
+	    # Read data for last BPM.
+            j = self.n_bpm - 1
+            data = inf.readline().strip('\n').split()[0];
+            self.data[plane][j][k] = 1e-3*float(data)
+            if prt:
+                printf('%10.6f\n', 1e3*self.data[plane][j][k])
+                if k % n_print != 0: printf('\n')
+
+    def rd_tbt(self, file_name, lin_opt):
+        inf = open(file_name, 'r')
+        self.rd_bpm_names(inf, lin_opt)
+        self.rd_bpm_data(0, inf)
+        self.rd_bpm_data(1, inf)
+        inf.close()
 
 
 class est_lin_opt_type (object):
@@ -92,138 +155,29 @@ class est_lin_opt_type (object):
         self.phi0 = np.zeros((2, 1))
 
 
-def get_loc(name, lin_opt):
-    k = 0
-    while k < len(lin_opt.locs and name != lin_opt.names[k]):
-	k += 1
-    return k
+    def zero(self, n):
+        for k in range(2):
+            self.beta[k] = np.zeros(n)
+            self.beta_sum[k] = np.zeros(n)
+            self.beta_sum2[k] = np.zeros(n)
+            self.beta_mean[k] = np.zeros(n)
+            self.beta_sigma[k] = np.zeros(n)
+            self.nu[k] = np.zeros(n)
+            self.dnu_sum[k] = np.zeros(n)
+            self.dnu_sum2[k] = np.zeros(n)
+            self.dnu_mean[k] = np.zeros(n)
+            self.dnu_sigma[k] = np.zeros(n)
+
+        for j in range(0, len(beta_sum[X_])):
+            for k in range(2):
+                self.beta_sum[k][j] = 0e0; self.beta_sum2[k][j] = 0e0
+                self.dnu_sum[k][j] = 0e0; self.dnu_sum2[k][j] = 0e0
 
 
-lin_opt = lin_opt_type()
+def DFT(x, n, sgn):
+    complex X[n]
 
-lin_opt.rd_data(
-    '/home/johan/git_repos/projects/src/sls_tbt/linlat_maxlab.out')
-
-"""
-
-def get_bpm_name(name):
-
-    k = 0
-    while (k < len(name.size)):
-	name[k] = (name[k] != '-') ? tolower(name[k]) : '_'
-	k += 1
-
-    str
-
-    prt = False
-    const n_print = 8
-
-    # Skip 1st line.
-    getline(inf, line)
-    # Read no of BPMs and no of turns.
-    get_line(inf, str)
-    str >> bpm_data.n_bpm >> bpm_data.n_turn
-    # Skip 3rd line.
-    getline(inf, line)
-    cout << "\nno of BPMs = " << bpm_data.n_bpm
-	<< ", no of turns = " << bpm_data.n_turn << "\n"
-
-    for k in range(2):
-	bpm_data.data[k].resize(bpm_data.n_bpm)
-	for j in range(0, bpm_data.n_bpm):
-	    bpm_data.data[k][j].resize(bpm_data.n_turn)
-
-    if prt:
-	cout << "\n"
-    for j in range(bpm_data.n_bpm):
-	get_line(inf, str)
-	str >> name
-	get_bpm_name(name)
-	bpm_data.names.push_back(name)
-	bpm_data.locs.push_back(get_loc(name, lin_opt))
-	if prt:
-	    cout << " " << bpm_data.names[j]
-	    if (j + 1) % n_print == 0:
-		cout << "\n"
-    if prt and (bpm_data.n_bpm % n_print != 0):
-	cout << "\n"
-
-
-def rd_bpm_data(plane, inf, bpm_data):
-    string line
-    stringstream sstr
-
-    const prt = False
-    const n_print = 8
-
-    if prt:
-	cout << "\n"
-    # Skip line.
-    get_line(inf, sstr)
-    for k in range(bpm_data.n_turn):
-	if prt:
-	    cout << "\n"
-	get_line(inf, sstr)
-	for j in range(bpm_data.n_bpm - 1):
-	    sstr >> bpm_data.data[plane][j][k]
-	    bpm_data.data[plane][j][k] *= 1e-3
-	    if prt:
-		cout << fixed << setprecision(6)
-		    << setw(10) << 1e3 * bpm_data.data[plane][j][k]
-		if (j + 1) % n_print == 0:
-		    cout << "\n"
-	j = bpm_data.n_bpm - 1
-	get_line(inf, sstr)
-	sstr >> bpm_data.data[plane][j][k]
-	bpm_data.data[plane][j][k] *= 1e-3
-	if prt:
-	    cout << fixed << setprecision(6)
-		<< setw(10) << 1e3 * bpm_data.data[plane][j][k]
-	    if k % n_print != 0:
-		cout << "\n"
-
-
-
-def rd_tbt(const file_name, lin_opt_type & lin_opt):
-    string line
-    stringstream sstr
-    ifstream inf
-
-    inf.os.open(file_name)
-
-    rd_bpm_names(inf, this, lin_opt)
-    rd_bpm_data(0, inf, this)
-    rd_bpm_data(1, inf, this)
-
-    inf.os.close()
-
-
-def est_lin_opt_type::zero(const n):
-
-    for k in range(2):
-	beta[k].resize(n)
-	beta_sum[k].resize(n)
-	beta_sum2[k].resize(n)
-	beta_mean[k].resize(n)
-	beta_sigma[k].resize(n)
-	nu[k].resize(n)
-	dnu_sum[k].resize(n)
-	dnu_sum2[k].resize(n)
-	dnu_mean[k].resize(n)
-	dnu_sigma[k].resize(n)
-
-    for j in range(0, (int) beta_sum[X_].size()):
-	for k in range(2):
-	    beta_sum[k][j] = 0e0
-	    beta_sum2[k][j] = 0e0
-	    dnu_sum[k][j] = 0e0
-	    dnu_sum2[k][j] = 0e0
-
-
-def DFT(x, const n, const sgn):
-    complex < >X[n]
-
-    const complex < >I = complex < >(0e0, 1e0)
+    const complex I = complex (0e0, 1e0)
 
     for j in range(n / 2+1):
 	X[j] = 0e0
@@ -259,7 +213,7 @@ def DFT(x, const n, const sgn):
 		sqr(math.sin((double) i / (double) (n - 1) * M_PI)) * x[i]
 	    break
 	default:
-	    cout << "FFT: not implemented\n"
+	    cout << 'FFT: not implemented\n'
 	    os.exit(1)
 	    break
 
@@ -294,7 +248,7 @@ def DFT(x, const n, const sgn):
 		sqr(math.sin((double) i / (double) (n - 1) * M_PI)) * x[i]
 	    break
 	default:
-	    cout << "FFT: not implemented" << "\n"
+	    cout << 'FFT: not implemented' << '\n'
 	    os.exit(1)
 	    break
 
@@ -347,7 +301,7 @@ def get_nu(const n, const A, const k, const window):
 	    nu = (ind - 1e0 + 3e0 * A2 / (A1 + A2)) / n
 	    break
 	default:
-	    cout << "get_nu: not defined\n"
+	    cout << 'get_nu: not defined\n'
 	    break
     } else:
 	nu = 0e0
@@ -373,11 +327,11 @@ get_A(const n, const A, const nu, k,
 	     sinc(M_PI * (k - 0.5e0 - nu * n))) / 2e0
 	break
     case 3:
-	cout << "get_A: not implemented\n"
+	cout << 'get_A: not implemented\n'
 	os.exit(1)
 	break
     default:
-	cout << "get_A: not defined\n"
+	cout << 'get_A: not defined\n'
 	break
 
     return A[k] / corr
@@ -471,7 +425,7 @@ def rm_mean1(n, x):
 	phi0_sum[j] = 0e0
 	phi0_sum2[j] = 0e0
 
-    printf("\n")
+    printf('\n')
     for i in range(bpm_data.n_bpm):
 	loc = bpm_data.locs[i]
 
@@ -508,7 +462,7 @@ def rm_mean1(n, x):
 	    phi0_sum[j] += phi0[j]
 	    phi0_sum2[j] += sqr(phi0[j])
 
-	# if (prt) printf("[%8.6f, %8.6f]\n", tunes[i][X_],
+	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i][X_],
 	# tunes[i][Y_])
 
     for j in range(2):
@@ -523,19 +477,19 @@ def rm_mean1(n, x):
 		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
 
     cout << scientific << setprecision(3)
-	<< "\ntwoJ = [" << twoJ_mean[X_] << "+/-" << twoJ_sigma[X_]
-	<< ", " << twoJ_mean[Y_] << "+/-" << twoJ_sigma[Y_] << "]"
+	<< '\ntwoJ = [' << twoJ_mean[X_] << '+/-' << twoJ_sigma[X_]
+	<< ', ' << twoJ_mean[Y_] << '+/-' << twoJ_sigma[Y_] << ']'
 	<< fixed
-	<< ", phi0 = [" << phi0_mean[X_] << "+/-" << phi0_sigma[X_]
-	<< ", " << phi0_mean[Y_] << "+/-" << phi0_sigma[Y_] << "]\n"
+	<< ', phi0 = [' << phi0_mean[X_] << '+/-' << phi0_sigma[X_]
+	<< ', ' << phi0_mean[Y_] << '+/-' << phi0_sigma[Y_] << ']\n'
     cout << fixed << setprecision(3)
-	<< "A0   = [" << 1e3 * math.sqrt(twoJ_mean[X_] *
-				    beta_pinger[X_]) << ", " << 1e3 *
-	math.sqrt(twoJ_mean[Y_] * beta_pinger[Y_]) << "] mm\n"
+	<< 'A0   = [' << 1e3 * math.sqrt(twoJ_mean[X_] *
+				    beta_pinger[X_]) << ', ' << 1e3 *
+	math.sqrt(twoJ_mean[Y_] * beta_pinger[Y_]) << '] mm\n'
 
     # Normalize.
     if prt:
-	cout << "\n bpm        A               nu            nu (model)\n"
+	cout << '\n bpm        A               nu            nu (model)\n'
     for i in range(bpm_data.n_bpm):
 	loc = bpm_data.locs[i]
 
@@ -562,20 +516,20 @@ def rm_mean1(n, x):
 	outf << fixed << setw(4) << i + 1
 	    << setprecision(3) << setw(8) << lin_opt.s[loc]
 	    << setprecision(5) << setw(9) << dnu[X_]
-	    << setw(9) << dnu[Y_] << "\n"
+	    << setw(9) << dnu[Y_] << '\n'
 
 	if prt:
 	    cout << fixed << setprecision(3)
 		<< setw(3) << i + 1
-		<< "  ["
-		<< setw(6) << 1e3 * As[i][X_] << ", "
-		<< setw(5) << 1e3 * As[i][Y_] << "]  ["
-		<< setw(6) << nus[i][X_] << ", "
-		<< setw(5) << nus[i][Y_] << "]  [" << setw(6)
-		<< lin_opt.nu[X_][loc] - (int) lin_opt.nu[X_][loc] << ", "
+		<< '  ['
+		<< setw(6) << 1e3 * As[i][X_] << ', '
+		<< setw(5) << 1e3 * As[i][Y_] << ']  ['
+		<< setw(6) << nus[i][X_] << ', '
+		<< setw(5) << nus[i][Y_] << ']  [' << setw(6)
+		<< lin_opt.nu[X_][loc] - (int) lin_opt.nu[X_][loc] << ', '
 		<< setw(5)
 		<< lin_opt.nu[Y_][loc] -
-		(int) lin_opt.nu[Y_][loc] << "]\n"
+		(int) lin_opt.nu[Y_][loc] << ']\n'
 
     for j in range(2):
 	est_lin_opt.tune_mean[j] = tune_sum[j] / bpm_data.n_bpm
@@ -591,19 +545,19 @@ def rm_mean1(n, x):
 		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
 
     cout << fixed << setprecision(6)
-	<< "\nnu    = [" << est_lin_opt.tune_mean[X_] << "+/-"
+	<< '\nnu    = [' << est_lin_opt.tune_mean[X_] << '+/-'
 	<< est_lin_opt.tune_sigma[X_]
-	<< ", " << est_lin_opt.tune_mean[Y_] << "+/-"
-	<< est_lin_opt.tune_sigma[Y_] << "]\n"
+	<< ', ' << est_lin_opt.tune_mean[Y_] << '+/-'
+	<< est_lin_opt.tune_sigma[Y_] << ']\n'
     cout << fixed << setprecision(6)
-	<< "alpha = [" << est_lin_opt.alpha_mean[X_] << "+/-"
+	<< 'alpha = [' << est_lin_opt.alpha_mean[X_] << '+/-'
 	<< est_lin_opt.alpha_sigma[X_]
-	<< ", " << est_lin_opt.alpha_mean[Y_] << "+/-"
-	<< est_lin_opt.alpha_sigma[Y_] << "]\n"
+	<< ', ' << est_lin_opt.alpha_mean[Y_] << '+/-'
+	<< est_lin_opt.alpha_sigma[Y_] << ']\n'
 
     cout << fixed << setprecision(5)
 	<< setw(8) << nus[6][X_] - nus[5][X_]
-	<< setw(8) << nus[6][Y_] - nus[5][Y_] << "\n"
+	<< setw(8) << nus[6][Y_] - nus[5][Y_] << '\n'
 
 
 get_m_s(const n, const sum, const sum2,
@@ -618,8 +572,8 @@ get_m_s(const n, const sum, const sum2,
     const dbeta_max = 5.0, dnu_max = 0.05
 
     if prt:
-	cout << "\n bpm                A                               "
-	    << "nu                              dnu\n"
+	cout << '\n bpm                A                               '
+	    << 'nu                              dnu\n'
     for j in range(bpm_data.n_bpm):
 	for k in range(2):
 	    get_m_s(n_stats, beta_sum[k][j], beta_sum2[k][j],
@@ -629,20 +583,20 @@ get_m_s(const n, const sum, const sum2,
 
 	if prt:
 	    cout << fixed << setprecision(3)
-		<< setw(3) << j + 1 << "  ["
-		<< setw(5) << beta_mean[j][X_] << "+/-"
-		<< setw(5) << beta_sigma[j][X_] << ", "
-		<< setw(4) << beta_mean[j][Y_] << "+/-"
-		<< setw(5) << beta_sigma[j][Y_] << "]  ["
-		<< setw(5) << dnu_mean[j][X_] << "+/-"
-		<< setw(5) << dnu_sigma[j][X_] << ", "
-		<< setw(4) << dnu_mean[j][Y_] << "+/-"
-		<< setw(4) << dnu_sigma[j][Y_] << "]\n"
+		<< setw(3) << j + 1 << '  ['
+		<< setw(5) << beta_mean[j][X_] << '+/-'
+		<< setw(5) << beta_sigma[j][X_] << ', '
+		<< setw(4) << beta_mean[j][Y_] << '+/-'
+		<< setw(5) << beta_sigma[j][Y_] << ']  ['
+		<< setw(5) << dnu_mean[j][X_] << '+/-'
+		<< setw(5) << dnu_sigma[j][X_] << ', '
+		<< setw(4) << dnu_mean[j][Y_] << '+/-'
+		<< setw(4) << dnu_sigma[j][Y_] << ']\n'
 
-    outf.os.open("tbt.out")
+    outf = open('tbt.out', 'w')
 
-    outf << "\n# bpm  s [m]                 beta [m]"
-	"                           nu\n"
+    outf << '\n# bpm  s [m]                 beta [m]'
+	'                           nu\n'
     for j in range(bpm_data.n_bpm):
 	loc = bpm_data.locs[j]
 	for k in range(2):
@@ -656,30 +610,30 @@ get_m_s(const n, const sum, const sum2,
 		dnu_mean[k][j] - (lin_opt.nu[k][loc] -
 				  (int) lin_opt.nu[k][loc])
 	    if dnu_sigma[k][j] > dnu_max:
-		cout << "\nBPM # " << j << " excluded, plane = " << k
-		    << "\n"
+		cout << '\nBPM # ' << j << ' excluded, plane = ' << k
+		    << '\n'
 		dnu[k] = 0e0
 		dnu_sigma[k][j] = 0e0
 
 	outf << fixed << setprecision(3)
 	    << setw(4) << j + 1 << setw(8) << lin_opt.s[loc]
-	    << setw(8) << dbeta[X_] << " +/- "
+	    << setw(8) << dbeta[X_] << ' +/- '
 	    << setw(5) << beta_sigma[X_][j]
-	    << setw(8) << dbeta[Y_] << " +/- "
+	    << setw(8) << dbeta[Y_] << ' +/- '
 	    << setw(5) << beta_sigma[Y_][j]
-	    << setw(7) << dnu_mean[X_][j] << " +/- "
+	    << setw(7) << dnu_mean[X_][j] << ' +/- '
 	    << setw(5) << dnu_sigma[X_][j]
-	    << setw(7) << dnu_mean[Y_][j] << " +/- "
+	    << setw(7) << dnu_mean[Y_][j] << ' +/- '
 	    << setw(5) << dnu_sigma[Y_][j]
 	    << setw(8) << lin_opt.beta[X_][loc]
-	    << setw(8) << lin_opt.beta[Y_][loc] << "\n"
+	    << setw(8) << lin_opt.beta[Y_][loc] << '\n'
 
     outf.os.close()
 
 
     ofstream outf
 
-    outf.os.open("sls.out")
+    outf = open('sls.out', 'w')
 
     for j in range(cut, n + cut):
 	x1[X_][j - cut] = x[j]
@@ -687,20 +641,20 @@ get_m_s(const n, const sum, const sum2,
 
 	outf << scientific << setprecision(3)
 	    << setw(5) << j +
-	    1 << setw(11) << x[j] << setw(11) << y[j] << "\n"
+	    1 << setw(11) << x[j] << setw(11) << y[j] << '\n'
 
     outf.os.close()
 
     for k in range(0, 2):
 	FFT(n, x1[k], A[k], phi[k], window)
 
-    outf.os.open("sls_fft.out")
+    outf = open('sls_fft.out', 'w')
 
     for k in range(n / 2+1):
 	outf << scientific << setprecision(3)
 	    << setw(5) << k + 1
 	    << setw(10) << (double) k / (double) n
-	    << setw(10) << A[X_][k] << setw(10) << A[Y_][k] << "\n"
+	    << setw(10) << A[X_][k] << setw(10) << A[Y_][k] << '\n'
 
     outf.os.close()
 
@@ -711,7 +665,7 @@ get_b1ob2_dnu(const n, const ss_vect ps1[],
     # BPMs.
 
 
-    cout << "\n"
+    cout << '\n'
     for j in range(2):
 	x1_sqr = 0.0
 	x2_sqr = 0.0
@@ -729,7 +683,7 @@ get_b1ob2_dnu(const n, const ss_vect ps1[],
 	dnu[j] = math.acos(x1x2 / math.sqrt(x1_sqr * x2_sqr)) / (2.0 * M_PI)
 
 	cout << scientific << setprecision(3)
-	    << "b1ob2 = " << b1ob2[j] << ", dnu = " << dnu[j] << "\n"
+	    << 'b1ob2 = ' << b1ob2[j] << ', dnu = ' << dnu[j] << '\n'
 
 
     ss_vect ps1[n], ps2[n]
@@ -744,15 +698,15 @@ get_b1ob2_dnu(const n, const ss_vect ps1[],
     loc1 = bpm_data.locs[bpm1 - 1]
     loc2 = bpm_data.locs[bpm2 - 1]
 
-    cout << "\n"
+    cout << '\n'
     cout << scientific << setprecision(3)
-	<< "b1ob2 = " << lin_opt.beta[X_][loc1] / lin_opt.beta[X_][loc2]
-	<< ", dnu = " << lin_opt.nu[X_][loc2] -
-	lin_opt.nu[X_][loc1] << "\n"
+	<< 'b1ob2 = ' << lin_opt.beta[X_][loc1] / lin_opt.beta[X_][loc2]
+	<< ', dnu = ' << lin_opt.nu[X_][loc2] -
+	lin_opt.nu[X_][loc1] << '\n'
     cout << scientific << setprecision(3)
-	<< "b1ob2 = " << lin_opt.beta[Y_][loc1] / lin_opt.beta[Y_][loc2]
-	<< ", dnu = " << lin_opt.nu[Y_][loc2] -
-	lin_opt.nu[Y_][loc1] << "\n"
+	<< 'b1ob2 = ' << lin_opt.beta[Y_][loc1] / lin_opt.beta[Y_][loc2]
+	<< ', dnu = ' << lin_opt.nu[Y_][loc2] -
+	lin_opt.nu[Y_][loc1] << '\n'
 
 
 def prt_name(outf, const name):
@@ -761,23 +715,25 @@ def prt_name(outf, const name):
 
     j = 0
     while True:
-	fprintf(outf, "%c" % (name[j]))
+	fprintf(outf, '%c' % (name[j]))
 	j += 1
     } while (j < len) and (name[j] != ' '):
-    fprintf(outf, ",")
+    fprintf(outf, ',')
     for k in range(j, len):
-	fprintf(outf, "%c" % (name[k]))
+	fprintf(outf, '%c' % (name[k]))
 
+"""
 
-def main(argc, argv):
-    bpm_data_type bpm_data
-    lin_opt_type lin_opt
-    est_lin_opt_type est_lin_opt
-    ofstream outf
+def main():
+    bpm_data = bpm_data_type()
+    lin_opt = lin_opt_type()
+    # est_lin_opt_type est_lin_opt
 
-    const string file_name = "linlat_maxlab.out"
+    home_dir = '/home/johan/git_repos/projects/src/sls_tbt/'
 
     # sls_ri_f6cwo_20.435_8.737_gset7
+    file_name = home_dir + 'linlat_maxlab.out'
+
     lin_opt.rd_data(file_name)
 
     # T-b-T data.
@@ -786,10 +742,12 @@ def main(argc, argv):
     n_turn = 2 * 1024
     bpm1 = 6
 
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215959.log", lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_215959.log', lin_opt)
 
     prt_FFT(n_turn, cut, bpm_data.data[X_][bpm1 - 1],
 	    bpm_data.data[Y_][bpm1 - 1], window)
+
+"""
 
     # Linear optics.
     window = 2
@@ -798,18 +756,18 @@ def main(argc, argv):
 
     est_lin_opt.zero(lin_opt.beta[X_].size())
 
-    outf.os.open("tbt_optics.out")
+    outf = open('tbt_optics.out', 'w')
 
     est_lin_opt.n_stats = 1
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_215619.log', lin_opt)
     get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt)
 
     est_lin_opt.n_stats += 1
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215631.log", lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_215631.log', lin_opt)
     get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt)
 
     est_lin_opt.n_stats += 1
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215652.log", lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_215652.log', lin_opt)
     get_nus(outf, cut, n_turn, window, bpm_data, lin_opt, est_lin_opt)
 
     outf.os.close()
@@ -821,8 +779,9 @@ def main(argc, argv):
     bpm1 = 5
     bpm2 = 6
 
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_215619.log', lin_opt)
 
     ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt)
 
-"""
+
+main()

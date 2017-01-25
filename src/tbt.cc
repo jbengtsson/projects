@@ -229,6 +229,7 @@ void bpm_data_type::rd_bpm_data(const int plane, ifstream & inf)
 		    cout << "\n";
 	    }
 	}
+	// Read data for last BPM.
 	j = n_bpm - 1;
 	get_line(inf, sstr);
 	sstr >> data[plane][j][k];
