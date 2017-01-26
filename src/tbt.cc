@@ -299,12 +299,9 @@ void DFT(double *x, const int n, const int sgn)
 	X[j] = 0e0;
 	for (k = 0; k < n; k++)
 	    X[j] +=
-		x[2 * k +
-		  1] * exp((double) sgn * I * 2e0 * M_PI * (double) (k *
-								     j) /
-			   (double) n);
+	      x[2 * k + 1]* exp((double) sgn * I * 2e0 * M_PI
+				* (double) (k * j) / (double) n);
     }
-
     for (j = 0; j < n / 2; j++) {
 	x[2 * j + 1] = real(X[j]);
 	x[2 * (j + 1)] = imag(X[j]);
@@ -573,7 +570,7 @@ get_nu(const int n, const double x[], double &nu, double &A_nu,
 }
 
 
-void rm_mean1(long int n, double x[])
+void rm_mean(long int n, double x[])
 {
     long int i;
     double mean;
@@ -624,7 +621,7 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
 	    for (k = cut; k < n + cut; k++)
 		x[k - cut] = bpm_data.data[j][i][k];
 
-	    rm_mean1(n, x);
+	    rm_mean(n, x);
 
 	    get_nu(n, x, tunes[i][j], As[i][j], phis[i][j], delta[j],
 		   alpha[j], window);

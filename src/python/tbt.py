@@ -1,6 +1,5 @@
-import curses, os, math
-import sys
-import re
+import curses, os, sys, re
+import math as m
 import numpy as np
 
 
@@ -12,9 +11,11 @@ ss_dim = 6
 
 def sqr(x): return x**2
 
-
 def printf(format, *args):
     sys.stdout.write(format % args)
+
+def fprintf(outf, format, *args):
+    outf.write(format % args)
 
 
 class lin_opt_type (object):
@@ -154,7 +155,6 @@ class est_lin_opt_type (object):
         self.phi = np.zeros((2, 1))
         self.phi0 = np.zeros((2, 1))
 
-
     def zero(self, n):
         for k in range(2):
             self.beta[k] = np.zeros(n)
@@ -175,196 +175,146 @@ class est_lin_opt_type (object):
 
 
 def DFT(x, n, sgn):
-    complex X[n]
-
-    const complex I = complex (0e0, 1e0)
-
-    for j in range(n / 2+1):
+    I = complex(0e0, 1e0)
+    for j in range(n/2+1):
 	X[j] = 0e0
 	for k in range(0, n):
-	    X[j] +=
-		x[2 * k +
-		  1] * math.exp((double) sgn * I * 2e0 * M_PI * (double) (k *
-								     j) /
-			   (double) n)
+	    X[j] += x[2*k+1]*m.exp(sgn*I*2e0*np.pi*(k*j)/float(n))
 
-    for j in range(n / 2):
-	x[2 * j + 1] = real(X[j])
-	x[2 * (j + 1)] = imag(X[j])
+    for j in range(n/2):
+	x[2*j+1] = real(X[j]); x[2*(j+1)] = imag(X[j])
 
 
-
-    xi = dvector(1, 2 * n)
+def FFT(n, x, A, phi, window):
+    xi = np.zeros(2*n)
 
     for i in range(n):
-	switch window:
-	case 1:
+	if window == 1:
 	    # Rectangular.
-	    xi[2 * i + 1] = x[i]
-	    break
-	case 2:
+	    xi[2*i+1] = x[i]
+	elif window == 2:
 	    # Sine.
-	    xi[2 * i + 1] =
-		math.sin((double) i / (double) (n - 1) * M_PI) * x[i]
+	    xi[2*i+1] =	m.sin(float(i)/float(n-1)*np.pi)*x[i]
 	    break
-	case 3:
+	elif window == 3:
 	    # Sine^2.
-	    xi[2 * i + 1] =
-		sqr(math.sin((double) i / (double) (n - 1) * M_PI)) * x[i]
-	    break
-	default:
-	    cout << 'FFT: not implemented\n'
+	    xi[2*i+1] = sqr(m.sin(flaot(i)/float(n-1)*np.pi))*x[i]
+	else:
+	    printf('FFT: not implemented\n')
 	    os.exit(1)
-	    break
 
-	xi[2 * (i + 1)] = 0e0
+	xi[2*(i+1)] = 0e0
+    np.fft.rfft(xi)
+    for i in range(n):
+	A[i] = m.sqrt(sqr(xi[2*i+1])+sqr(xi[2*(i+1)]))*2e0/n
+	phi[i] = -m.atan2(xi[2*(i+1)], xi[2*i+1])
 
-    dfour1(xi, (unsigned long) n, 1)
+
+def FFT(n, x, X, window):
+    xi = np.zeros(2*n)
 
     for i in range(n):
-	A[i] = math.sqrt(sqr(xi[2 * i + 1]) + sqr(xi[2 * (i + 1)])) * 2e0 / n
-	phi[i] = -math.atan2(xi[2 * (i + 1)], xi[2 * i + 1])
-
-    free_dvector(xi, 1, 2 * n)
-
-
-
-    xi = dvector(1, 2 * n)
-
-    for i in range(n):
-	switch window:
-	case 1:
+	if window == 1:
 	    # Rectangular.
-	    xi[2 * i + 1] = x[i]
-	    break
-	case 2:
+	    xi[2*i+1] = x[i]
+	elif window == 2:
 	    # Sine.
-	    xi[2 * i + 1] =
-		math.sin((double) i / (double) (n - 1) * M_PI) * x[i]
-	    break
-	case 3:
+	    xi[2*i+1] =	m.sin(float(i)/float(n-1)*np.pi)*x[i]
+	elif window == 3:
 	    # Sine^2.
-	    xi[2 * i + 1] =
-		sqr(math.sin((double) i / (double) (n - 1) * M_PI)) * x[i]
-	    break
-	default:
+	    xi[2*i+1] =	sqr(m.sin(flaot(i)/float(n-1)*np.pi))*x[i]
+	else:
 	    cout << 'FFT: not implemented' << '\n'
 	    os.exit(1)
-	    break
 
-	xi[2 * (i + 1)] = 0e0
+	xi[2*(i+1)] = 0e0
 
-    dfour1(xi, (unsigned long) n, 1)
+    nr.fft.rfft(xi, 1)
 
     for i in range(0, n):
-	X[i] = complex < >(xi[2 * (i + 1)], xi[2 * i + 1])
-
-    free_dvector(xi, 1, 2 * n)
+	X[i] = complex(xi[2*(i+1)], xi[2*i+1])
 
 
-def get_ind(const n, const k, &ind1, &ind3):
+def get_ind(n, k, ind1, ind3):
     # Spectrum for real signal is irror symmetric at k = (0, n/2).
     if k == 0:
-	ind1 = 1
-	ind3 = 1
-    } elif k == n / 2:
-	ind1 = n / 2 - 1
-	ind3 = n / 2 - 1
+	ind1 = 1; ind3 = 1
+    elif k == n/2:
+	ind1 = n/2 - 1; ind3 = n/2 - 1
     else:
-	ind1 = k - 1
-	ind3 = k + 1
+	ind1 = k - 1; ind3 = k + 1
 
 
-def get_nu(const n, const A, const k, const window):
+def get_nu(n, A, k, window):
     nu = 0e0
 
     get_ind(n, k, ind1, ind3)
     if A[ind3] > A[ind1]:
-	A1 = A[k]
-	A2 = A[ind3]
-	ind = k
+	A1 = A[k]; A2 = A[ind3]; ind = k
     else:
-	A1 = A[ind1]
-	A2 = A[k]
+	A1 = A[ind1]; A2 = A[k]
 	# Special case for 0 frequency.
-	ind = (k != 0) ? ind1 : -1
+	if k != 0:
+            ind = ind1
+        else:
+            ind = -1
     # Avoid division by zero.
-    if A1 + A2 != 0e0:
-	switch window:
-	case 1:
-	    nu = (ind + A2 / (A1 + A2)) / n
-	    break
-	case 2:
-	    nu = (ind - 0.5e0 + 2e0 * A2 / (A1 + A2)) / n
-	    break
-	case 3:
-	    nu = (ind - 1e0 + 3e0 * A2 / (A1 + A2)) / n
-	    break
-	default:
+    if A1+A2 != 0e0:
+	if (window == 1):
+	    nu = (ind+A2/(A1+A2))/n
+	elif window == 2:
+	    nu = (ind-0.5e0+2e0*A2/(A1+A2))/n
+	elif window == 3:
+	    nu = (ind-1e0+3e0*A2/(A1+A2))/n
+	else:
 	    cout << 'get_nu: not defined\n'
-	    break
-    } else:
+    else:
 	nu = 0e0
 
     return nu
 
 
 def sinc(omega):
-    return (omega != 0.0) ? math.sin(omega) / omega : 1e0
+    if (omega != 0.0):
+        return m.sin(omega)/omega
+    else:
+        return 1e0
 
 
-get_A(const n, const A, const nu, k,
-      const window)
+def get_A(n, A, nu, k, window):
     corr = 0e0
-
-    switch window:
-    case 1:
-	corr = sinc(M_PI * (k - nu * n))
-	break
-    case 2:
-	corr =
-	    (sinc(M_PI * (k + 0.5e0 - nu * n)) +
-	     sinc(M_PI * (k - 0.5e0 - nu * n))) / 2e0
-	break
-    case 3:
+    if window == 1:
+	corr = sinc(np.pi*(k-nu*n))
+    elif window == 2:
+	corr = (sinc(np.pi*(k+0.5e0-nu*n))+sinc(np.pi*(k-0.5e0-nu*n)))/2e0
+    elif window == 3:
 	cout << 'get_A: not implemented\n'
 	os.exit(1)
-	break
-    default:
+    else:
 	cout << 'get_A: not defined\n'
-	break
-
-    return A[k] / corr
+    return A[k]/corr
 
 
-get_alpha(const n, const complex < >X[], const nu,
-	  const k, &delta, &alpha)
+def get_alpha(n, X, nu, k, delta, alpha):
     # M. Bertocco, C. Offelli, D. Petri "Analysis of Damped Sinusoidal
     # Signals
     # via a Frequency-Domain Interpolation Algorithm" IEEE 43 (2),
     # 245-250
     # (1994).
-    complex < >rho, z
 
-    const complex < >I = complex < >(0e0, 1e0)
+    I = complex (0e0, 1e0)
 
     get_ind(n, k, ind1, ind3)
 
     if abs(X[ind3]) > abs(X[ind1]):
-	d = 1
-	rho = X[ind3] / X[k]
+	d = 1; rho = X[ind3]/X[k]
     else:
-	d = -1
-	rho = X[ind1] / X[k]
-    z = (1e0 - rho) / (1e0 -
-		       rho * math.exp(-I * 2e0 * M_PI * (double) d /
-				 (double) n))
-    delta = n * arg(z) / (2e0 * M_PI)
-    alpha = n * math.log(abs(z)) / (2e0 * M_PI)
+	d = -1; rho = X[ind1]/X[k]
+    z = (1e0-rho)/(1e0-rho*m.exp(-I*2e0*np.pi*float(d)/float(n)))
+    delta = n*arg(z)/(2e0*np.pi); alpha = n*m.log(abs(z))/(2e0*np.pi)
 
 
-def get_peak(const n, const A):
-
+def get_peak(n, A):
     k = 0
     peak = 0e0
     for ind2 in range(n / 2+1):
@@ -372,37 +322,31 @@ def get_peak(const n, const A):
 	if (A[ind2] > peak) and (A[ind1] < A[ind2]) and (A[ind2] > A[ind3]):
 	    peak = A[ind2]
 	    k = ind2
-
     return k
 
 
-
-    phi_nu = phi[k] - (n * nu - k) * M_PI
-    if phi_nu > M_PI:
-	phi_nu -= 2.0 * M_PI
-    elif phi_nu < -M_PI:
-	phi_nu += 2.0 * M_PI
-
+def get_phi(n,  k,  nu, phi):
+    phi_nu = phi[k] - (n*nu-k)*np.pi
+    if phi_nu > np.pi:
+	phi_nu -= 2.0*np.pi
+    elif phi_nu < -np.pi:
+	phi_nu += 2.0*np.pi
     return phi_nu
 
 
-    complex < >X[n]
-
+def get_nu(n,  x, nu, A_nu, phi_nu, delta, alpha, window):
     FFT(n, x, A, phi, window)
-
     k = get_peak(n, A)
     nu = get_nu(n, A, k, window)
     A_nu = get_A(n, A, nu, k, window)
     phi_nu = get_phi(n, k, nu, phi)
-
     # Rectangular window.
     FFT(n, x, X, 1)
     get_alpha(n, X, nu, k, delta, alpha)
 
 
-def rm_mean1(n, x):
-
-    mean = 0.0
+def rm_mean(n, x):
+    mean = 0e0
     for i in range(0, n):
 	mean += x[i]
     mean /= n
@@ -410,20 +354,15 @@ def rm_mean1(n, x):
 	x[i] -= mean
 
 
-
-    const prt = False
-    constsgn = ( 1, -1 )
-    constbeta_pinger = ( 6.92e0, 6.76e0 )
+def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
+    prt = False
+    sgn = complex(1, -1)
+    beta_pinger = (6.92e0, 6.76e0)
 
     for j in range(2):
-	tune_sum[j] = 0e0
-	tune_sum2[j] = 0e0
-	alpha_sum[j] = 0e0
-	alpha_sum2[j] = 0e0
-	twoJ_sum[j] = 0e0
-	twoJ_sum2[j] = 0e0
-	phi0_sum[j] = 0e0
-	phi0_sum2[j] = 0e0
+	tune_sum[j] = 0e0; tune_sum2[j] = 0e0;alpha_sum[j] = 0e0
+	alpha_sum2[j] = 0e0; twoJ_sum[j] = 0e0;	twoJ_sum2[j] = 0e0
+	phi0_sum[j] = 0e0; phi0_sum2[j] = 0e0
 
     printf('\n')
     for i in range(bpm_data.n_bpm):
@@ -433,7 +372,7 @@ def rm_mean1(n, x):
 	    for k in range(cut, n + cut):
 		x[k - cut] = bpm_data.data[j][i][k]
 
-	    rm_mean1(n, x)
+	    rm_mean(n, x)
 
 	    get_nu(n, x, tunes[i][j], As[i][j], phis[i][j], delta[j],
 		   alpha[j], window)
@@ -441,139 +380,107 @@ def rm_mean1(n, x):
 	    if sgn[j] < 0:
 		phis[i][j] = -phis[i][j]
 	    if phis[i][j] < 0e0:
-		phis[i][j] += 2e0 * M_PI
-	    nus[i][j] = phis[i][j] / (2e0 * M_PI)
+		phis[i][j] += 2e0 * np.pi
+	    nus[i][j] = phis[i][j] / (2e0 * np.pi)
 
-	    tune_sum[j] += tunes[i][j]
-	    tune_sum2[j] += sqr(tunes[i][j])
-	    alpha_sum[j] += alpha[j]
-	    alpha_sum2[j] += sqr(alpha[j])
+	    tune_sum[j] += tunes[i][j]; tune_sum2[j] += sqr(tunes[i][j])
+	    alpha_sum[j] += alpha[j]; alpha_sum2[j] += sqr(alpha[j])
 
-	    twoJ = sqr(As[i][j]) / lin_opt.beta[j][loc]
-	    twoJ_sum[j] += twoJ
-	    twoJ_sum2[j] += sqr(twoJ)
+	    twoJ = sqr(As[i][j])/lin_opt.beta[j][loc]
+	    twoJ_sum[j] += twoJ; twoJ_sum2[j] += sqr(twoJ)
 
-	    phi0[j] =
-		(nus[i][j] -
-		 (lin_opt.nu[j][loc] -
-		  (int) lin_opt.nu[j][loc])) * 2e0 * M_PI
+	    phi0[j] = (nus[i][j]-(lin_opt.nu[j][loc]
+                                  -int(lin_opt.nu[j][loc])))*2e0*np.pi
 	    if phi0[j] < 0e0:
-		phi0[j] += 2e0 * M_PI
-	    phi0_sum[j] += phi0[j]
-	    phi0_sum2[j] += sqr(phi0[j])
+		phi0[j] += 2e0*np.pi
+	    phi0_sum[j] += phi0[j]; phi0_sum2[j] += sqr(phi0[j])
 
 	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i][X_],
 	# tunes[i][Y_])
 
     for j in range(2):
 	twoJ_mean[j] = twoJ_sum[j] / bpm_data.n_bpm
-	twoJ_sigma[j] =
-	    math.sqrt((bpm_data.n_bpm * twoJ_sum2[j] - sqr(twoJ_sum[j]))
-		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
+        twoJ_sigma[j] = m.sqrt((bpm_data.n_bpm*twoJ_sum2[j]
+                                   -sqr(twoJ_sum[j]))
+		                  /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
-	phi0_mean[j] = phi0_sum[j] / bpm_data.n_bpm
-	phi0_sigma[j] =
-	    math.sqrt((bpm_data.n_bpm * phi0_sum2[j] - sqr(phi0_sum[j]))
-		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
+	phi0_mean[j] = phi0_sum[j]/bpm_data.n_bpm
+	phi0_sigma[j] = m.sqrt((bpm_data.n_bpm*phi0_sum2[j]
+                                   -sqr(phi0_sum[j]))
+		                  /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
-    cout << scientific << setprecision(3)
-	<< '\ntwoJ = [' << twoJ_mean[X_] << '+/-' << twoJ_sigma[X_]
-	<< ', ' << twoJ_mean[Y_] << '+/-' << twoJ_sigma[Y_] << ']'
-	<< fixed
-	<< ', phi0 = [' << phi0_mean[X_] << '+/-' << phi0_sigma[X_]
-	<< ', ' << phi0_mean[Y_] << '+/-' << phi0_sigma[Y_] << ']\n'
-    cout << fixed << setprecision(3)
-	<< 'A0   = [' << 1e3 * math.sqrt(twoJ_mean[X_] *
-				    beta_pinger[X_]) << ', ' << 1e3 *
-	math.sqrt(twoJ_mean[Y_] * beta_pinger[Y_]) << '] mm\n'
+    printf('\ntwoJ = [%11.3e+/-%11.3e, %11.3e+/-%11.3e]'
+           ', phi0 = [%9.3e]+/-%9.3f, %9.3f+/-%9.3f]\n',
+           twoJ_mean[X_], twoJ_sigma[X_], twoJ_mean[Y_], twoJ_sigma[Y_],
+           phi0_mean[X_], phi0_sigma[X_], phi0_mean[Y_], phi0_sigma[Y_])
+    printf('A0   = [%9.3f, %9.3f] mm\n',
+           1e3*m.sqrt(twoJ_mean[X_]*beta_pinger[X_]),
+           1e3*m.sqrt(twoJ_mean[Y_]*beta_pinger[Y_]))
 
     # Normalize.
     if prt:
-	cout << '\n bpm        A               nu            nu (model)\n'
+        printf('\n bpm        A               nu            nu (model)\n')
     for i in range(bpm_data.n_bpm):
 	loc = bpm_data.locs[i]
-
 	for j in range(2):
-	    beta = sqr(As[i][j]) / twoJ_mean[j]
+	    beta = sqr(As[i][j])/twoJ_mean[j]
 
-	    nus[i][j] -= phi0_mean[j] / (2e0 * M_PI)
-	    if nus[i][j] < 0e0:
-		nus[i][j] += 1e0
+	    nus[i][j] -= phi0_mean[j]/(2e0*np.pi)
+	    if nus[i][j] < 0e0:	nus[i][j] += 1e0
 
-	    dnu[j] =
-		nus[i][j] - (lin_opt.nu[j][loc] -
-			     (int) lin_opt.nu[j][loc])
-	    if dnu[j] < -0.5e0:
-		dnu[j] += 1e0
-	    if dnu[j] > 0.5e0:
-		dnu[j] -= 1e0
+	    dnu[j] = nus[i][j]-(lin_opt.nu[j][loc] -int(lin_opt.nu[j][loc]))
+	    if dnu[j] < -0.5e0: dnu[j] += 1e0
+	    if dnu[j] > 0.5e0:	dnu[j] -= 1e0
 
 	    est_lin_opt.beta_sum[j][i] += beta
 	    est_lin_opt.beta_sum2[j][i] += sqr(beta)
 	    est_lin_opt.dnu_sum[j][i] += dnu[j]
 	    est_lin_opt.dnu_sum2[j][i] += sqr(dnu[j])
 
-	outf << fixed << setw(4) << i + 1
-	    << setprecision(3) << setw(8) << lin_opt.s[loc]
-	    << setprecision(5) << setw(9) << dnu[X_]
-	    << setw(9) << dnu[Y_] << '\n'
+	fprintf(outf, '%4d %7.3f %8.3f %8.3f\n',
+                i+1, lin_opt.s[loc], dnu[X_], dnu[Y_])
 
 	if prt:
-	    cout << fixed << setprecision(3)
-		<< setw(3) << i + 1
-		<< '  ['
-		<< setw(6) << 1e3 * As[i][X_] << ', '
-		<< setw(5) << 1e3 * As[i][Y_] << ']  ['
-		<< setw(6) << nus[i][X_] << ', '
-		<< setw(5) << nus[i][Y_] << ']  [' << setw(6)
-		<< lin_opt.nu[X_][loc] - (int) lin_opt.nu[X_][loc] << ', '
-		<< setw(5)
-		<< lin_opt.nu[Y_][loc] -
-		(int) lin_opt.nu[Y_][loc] << ']\n'
+	    fprintf('%3d  [%6.3f, %5.3f]  [%6.3f, %5.3f]  [%6.3f, %5.3f]\n',
+                    i+1, 1e3*As[i][X_], 1e3*As[i][Y_],
+                    nus[i][X_], nus[i][Y_],
+                    lin_opt.nu[X_][loc]-int(lin_opt.nu[X_][loc]),
+                    lin_opt.nu[Y_][loc]-int(lin_opt.nu[Y_][loc]))
 
     for j in range(2):
-	est_lin_opt.tune_mean[j] = tune_sum[j] / bpm_data.n_bpm
+	est_lin_opt.tune_mean[j] = tune_sum[j]/bpm_data.n_bpm
 	if sgn[j] < 0:
 	    est_lin_opt.tune_mean[j] = 1e0 - est_lin_opt.tune_mean[j]
-	est_lin_opt.tune_sigma[j] =
-	    math.sqrt((bpm_data.n_bpm * tune_sum2[j] - sqr(tune_sum[j]))
-		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
+	est_lin_opt.tune_sigma[j] = \
+            m.sqrt((bpm_data.n_bpm*tune_sum2[j]-sqr(tune_sum[j]))
+		   /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
-	est_lin_opt.alpha_mean[j] = alpha_sum[j] / bpm_data.n_bpm
-	est_lin_opt.alpha_sigma[j] =
-	    math.sqrt((bpm_data.n_bpm * alpha_sum2[j] - sqr(alpha_sum[j]))
-		 / (bpm_data.n_bpm * (bpm_data.n_bpm - 1e0)))
+	est_lin_opt.alpha_mean[j] = alpha_sum[j]/bpm_data.n_bpm
+	est_lin_opt.alpha_sigma[j] = \
+	    m.sqrt((bpm_data.n_bpm*alpha_sum2[j]-sqr(alpha_sum[j]))
+		   /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
-    cout << fixed << setprecision(6)
-	<< '\nnu    = [' << est_lin_opt.tune_mean[X_] << '+/-'
-	<< est_lin_opt.tune_sigma[X_]
-	<< ', ' << est_lin_opt.tune_mean[Y_] << '+/-'
-	<< est_lin_opt.tune_sigma[Y_] << ']\n'
-    cout << fixed << setprecision(6)
-	<< 'alpha = [' << est_lin_opt.alpha_mean[X_] << '+/-'
-	<< est_lin_opt.alpha_sigma[X_]
-	<< ', ' << est_lin_opt.alpha_mean[Y_] << '+/-'
-	<< est_lin_opt.alpha_sigma[Y_] << ']\n'
+    fprintf('\nnu    = [%8.6f+/-%8.6f, %8.6f+/-%8.6f]\n',
+            est_lin_opt.tune_mean[X_], est_lin_opt.tune_sigma[X_],
+            est_lin_opt.tune_mean[Y_], est_lin_opt.tune_sigma[Y_])
+    fprintf('alpha = [%8.6f+/-%8.6f, %8.6f+/-%8.6f]\n',
+            est_lin_opt.alpha_mean[X_], est_lin_opt.alpha_sigma[X_],
+            est_lin_opt.alpha_mean[Y_], est_lin_opt.alpha_sigma[Y_])
 
-    cout << fixed << setprecision(5)
-	<< setw(8) << nus[6][X_] - nus[5][X_]
-	<< setw(8) << nus[6][Y_] - nus[5][Y_] << '\n'
+    fprintf('%8.5f %8.5f\n', nus[6][X_]-nus[5][X_], nus[6][Y_]-nus[5][Y_])
 
 
-get_m_s(const n, const sum, const sum2,
-	     &mean, &sigma)
-    mean = sum / n
-    sigma = math.sqrt((n * sum2 - sqr(sum)) / (n * (n - 1e0)))
+def get_m_s(n, sum, sum2, mean, sigma):
+    mean = sum/n; sigma = m.sqrt((n*sum2-sqr(sum))/(n*(n-1e0)))
 
 
-    ofstream outf
-
-    const prt = False
-    const dbeta_max = 5.0, dnu_max = 0.05
+def get_stats(bpm_data, lin_opt):
+    prt = False
+    dbeta_max = 5.0; dnu_max = 0.05
 
     if prt:
-	cout << '\n bpm                A                               '
-	    << 'nu                              dnu\n'
+	printf('\n bpm                A                               '
+               'nu                              dnu\n')
     for j in range(bpm_data.n_bpm):
 	for k in range(2):
 	    get_m_s(n_stats, beta_sum[k][j], beta_sum2[k][j],
@@ -582,66 +489,49 @@ get_m_s(const n, const sum, const sum2,
 		    dnu_sigma[k][j])
 
 	if prt:
-	    cout << fixed << setprecision(3)
-		<< setw(3) << j + 1 << '  ['
-		<< setw(5) << beta_mean[j][X_] << '+/-'
-		<< setw(5) << beta_sigma[j][X_] << ', '
-		<< setw(4) << beta_mean[j][Y_] << '+/-'
-		<< setw(5) << beta_sigma[j][Y_] << ']  ['
-		<< setw(5) << dnu_mean[j][X_] << '+/-'
-		<< setw(5) << dnu_sigma[j][X_] << ', '
-		<< setw(4) << dnu_mean[j][Y_] << '+/-'
-		<< setw(4) << dnu_sigma[j][Y_] << ']\n'
+	    printf('%3d  [%5.3f+/-%5.3f, %4.3f+/-%5.3f]'
+                   '  [%5.3f+/-%5.3f, %4.3f+/-%4.3f]\n',
+                   j+1, beta_mean[j][X_], beta_sigma[j][X_],
+                   beta_mean[j][Y_], beta_sigma[j][Y_],
+                   dnu_mean[j][X_], dnu_sigma[j][X_],
+                   dnu_mean[j][Y_], dnu_sigma[j][Y_])
 
     outf = open('tbt.out', 'w')
 
-    outf << '\n# bpm  s [m]                 beta [m]'
-	'                           nu\n'
+    fprintf('\n# bpm  s [m]                 beta [m]'
+           '                           nu\n', outf)
     for j in range(bpm_data.n_bpm):
 	loc = bpm_data.locs[j]
 	for k in range(2):
 	    # dbeta[k] = beta_mean[k][j] - lin_opt.beta[k][loc]
 	    dbeta[k] = beta_mean[k][j]
 	    if beta_sigma[k][j] > dbeta_max:
-		dbeta[k] = 0e0
-		beta_sigma[k][j] = 0e0
+		dbeta[k] = 0e0;	beta_sigma[k][j] = 0e0
 
-	    dnu[k] =
-		dnu_mean[k][j] - (lin_opt.nu[k][loc] -
-				  (int) lin_opt.nu[k][loc])
+	    dnu[k] = dnu_mean[k][j] \
+                     - (lin_opt.nu[k][loc]-int(lin_opt.nu[k][loc]))
 	    if dnu_sigma[k][j] > dnu_max:
-		cout << '\nBPM # ' << j << ' excluded, plane = ' << k
-		    << '\n'
-		dnu[k] = 0e0
-		dnu_sigma[k][j] = 0e0
+		cout << '\nBPM # ' << j << ' excluded, plane = ' << k << '\n'
+		dnu[k] = 0e0; dnu_sigma[k][j] = 0e0
 
-	outf << fixed << setprecision(3)
-	    << setw(4) << j + 1 << setw(8) << lin_opt.s[loc]
-	    << setw(8) << dbeta[X_] << ' +/- '
-	    << setw(5) << beta_sigma[X_][j]
-	    << setw(8) << dbeta[Y_] << ' +/- '
-	    << setw(5) << beta_sigma[Y_][j]
-	    << setw(7) << dnu_mean[X_][j] << ' +/- '
-	    << setw(5) << dnu_sigma[X_][j]
-	    << setw(7) << dnu_mean[Y_][j] << ' +/- '
-	    << setw(5) << dnu_sigma[Y_][j]
-	    << setw(8) << lin_opt.beta[X_][loc]
-	    << setw(8) << lin_opt.beta[Y_][loc] << '\n'
+	printf('%4d %8.3f +/- %5.3f %8.3f +/- %5.3f'
+               '%7.3f +/- %5.3f %8.3f +/- %8.3f\n',
+               j+1, lin_opt.s[loc],
+               dbeta[X_], beta_sigma[X_][j], dbeta[Y_], beta_sigma[Y_][j],
+               dnu_mean[X_][j], dnu_sigma[X_][j],
+               dnu_mean[Y_][j], dnu_sigma[Y_][j],
+               lin_opt.beta[X_][loc], lin_opt.beta[Y_][loc])
 
     outf.os.close()
 
 
-    ofstream outf
-
+def prt_FFT(n, cut, x, y, window):
     outf = open('sls.out', 'w')
 
     for j in range(cut, n + cut):
-	x1[X_][j - cut] = x[j]
-	x1[Y_][j - cut] = y[j]
+	x1[X_][j-cut] = x[j]; x1[Y_][j-cut] = y[j]
 
-	outf << scientific << setprecision(3)
-	    << setw(5) << j +
-	    1 << setw(11) << x[j] << setw(11) << y[j] << '\n'
+	fprintf('%5d %11.3e %11.3e\n', outf, j+1, x[j], y[j])
 
     outf.os.close()
 
@@ -651,78 +541,58 @@ get_m_s(const n, const sum, const sum2,
     outf = open('sls_fft.out', 'w')
 
     for k in range(n / 2+1):
-	outf << scientific << setprecision(3)
-	    << setw(5) << k + 1
-	    << setw(10) << (double) k / (double) n
-	    << setw(10) << A[X_][k] << setw(10) << A[Y_][k] << '\n'
+        fprintf('%5d %9.3e %9.3e %9.3e\n',
+                outf, k+1, float(k)/float(n), A[X_][k], A[Y_][k])
 
     outf.os.close()
 
 
-get_b1ob2_dnu(const n, const ss_vect ps1[],
-	      const ss_vect ps2[], b1ob2, dnu)
+def get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu):
     # Estimate beta_1/beta_2 and Dnu by tracking data from two adjacent
     # BPMs.
 
-
     cout << '\n'
     for j in range(2):
-	x1_sqr = 0.0
-	x2_sqr = 0.0
-	x1x2 = 0.0
+	x1_sqr = 0e0; x2_sqr = 0e0; x1x2 = 0e0
 	for k in range(n):
-	    x1_sqr += sqr(ps1[k][2 * j])
-	    x2_sqr += sqr(ps2[k][2 * j])
-	    x1x2 += ps1[k][2 * j] * ps2[k][2 * j]
+	    x1_sqr += sqr(ps1[k][2*j]); x2_sqr += sqr(ps2[k][2*j])
+	    x1x2 += ps1[k][2*j]*ps2[k][2*j]
 
-	x1_sqr /= n
-	x2_sqr /= n
-	x1x2 /= n
+	x1_sqr /= n; x2_sqr /= n; x1x2 /= n;
 
-	b1ob2[j] = x1_sqr / x2_sqr
-	dnu[j] = math.acos(x1x2 / math.sqrt(x1_sqr * x2_sqr)) / (2.0 * M_PI)
+	b1ob2[j] = x1_sqr/x2_sqr
+	dnu[j] = m.acos(x1x2/m.sqrt(x1_sqr*x2_sqr))/(2e0*np.pi)
 
-	cout << scientific << setprecision(3)
-	    << 'b1ob2 = ' << b1ob2[j] << ', dnu = ' << dnu[j] << '\n'
+	printf('b1ob2 = 10.3e, dnu = 10.3e\n', b1ob2[j], dnu[j])
 
 
-    ss_vect ps1[n], ps2[n]
-
+def ss_est(n, bpm1, bpm2, bpm_data, lin_opt):
     for j in range(0, n):
 	for k in range(2):
-	    ps1[k][j] = bpm_data.data[k][bpm1 - 1][j]
-	    ps2[k][j] = bpm_data.data[k][bpm2 - 1][j]
+	    ps1[k][j] = bpm_data.data[k][bpm1-1][j]
+	    ps2[k][j] = bpm_data.data[k][bpm2-1][j]
 
     get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu)
 
-    loc1 = bpm_data.locs[bpm1 - 1]
-    loc2 = bpm_data.locs[bpm2 - 1]
+    loc1 = bpm_data.locs[bpm1-1]; loc2 = bpm_data.locs[bpm2-1]
 
-    cout << '\n'
-    cout << scientific << setprecision(3)
-	<< 'b1ob2 = ' << lin_opt.beta[X_][loc1] / lin_opt.beta[X_][loc2]
-	<< ', dnu = ' << lin_opt.nu[X_][loc2] -
-	lin_opt.nu[X_][loc1] << '\n'
-    cout << scientific << setprecision(3)
-	<< 'b1ob2 = ' << lin_opt.beta[Y_][loc1] / lin_opt.beta[Y_][loc2]
-	<< ', dnu = ' << lin_opt.nu[Y_][loc2] -
-	lin_opt.nu[Y_][loc1] << '\n'
+    printf('\nb1ob2 = %10.3e, dnu =  %10.3e\n',
+           lin_opt.beta[X_][loc1]/lin_opt.beta[X_][loc2],
+           lin_opt.nu[X_][loc2]-lin_opt.nu[X_][loc1])
+    printf('b1ob2 =  %10.3e, dnu =  %10.3e\n',
+           lin_opt.beta[Y_][loc1]/lin_opt.beta[Y_][loc2],
+	   lin_opt.nu[Y_][loc2]-lin_opt.nu[Y_][loc1])
 
 
-def prt_name(outf, const name):
-
-    len = len(name)
-
-    j = 0
-    while True:
+def prt_name(outf, name):
+    strlen = len(name); j = 0
+    while (j < strlen) and (name[j] != ' '):
 	fprintf(outf, '%c' % (name[j]))
 	j += 1
-    } while (j < len) and (name[j] != ' '):
     fprintf(outf, ',')
-    for k in range(j, len):
+    for k in range(j, strlen):
 	fprintf(outf, '%c' % (name[k]))
 
-"""
 
 def main():
     bpm_data = bpm_data_type()
@@ -737,22 +607,15 @@ def main():
     lin_opt.rd_data(file_name)
 
     # T-b-T data.
-    window = 2
-    cut = 0 * 5
-    n_turn = 2 * 1024
-    bpm1 = 6
+    window = 2; cut = 0*5; n_turn = 2*1024; bpm1 = 6
 
     bpm_data.rd_tbt(home_dir+'tbt_090513_215959.log', lin_opt)
 
-    prt_FFT(n_turn, cut, bpm_data.data[X_][bpm1 - 1],
-	    bpm_data.data[Y_][bpm1 - 1], window)
-
-"""
+    prt_FFT(n_turn, cut, bpm_data.data[X_][bpm1-1],
+	    bpm_data.data[Y_][bpm1-1], window)
 
     # Linear optics.
-    window = 2
-    cut = 0
-    n_turn = 2048
+    window = 2; cut = 0; n_turn = 2048
 
     est_lin_opt.zero(lin_opt.beta[X_].size())
 
@@ -775,9 +638,7 @@ def main():
     est_lin_opt.get_stats(bpm_data, lin_opt)
 
     # Phase space.
-    n_turn = 2048
-    bpm1 = 5
-    bpm2 = 6
+    n_turn = 2048; bpm1 = 5; bpm2 = 6
 
     bpm_data.rd_tbt(home_dir+'tbt_090513_215619.log', lin_opt)
 
