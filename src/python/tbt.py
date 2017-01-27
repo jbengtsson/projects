@@ -50,7 +50,7 @@ class lin_opt_type (object):
                     nu[k] = float(nu[k]);
                     eta[k] = float(eta[k]); etap[k] = float(etap[k]);
                 self.loc.append(n)
-                self.name = np.append(self.name, name)
+                self.name = np.append(self.name, name.lstrip())
                 self.s = np.append(self.s, s)
                 self.alpha = np.append(self.alpha, [alpha[X_], alpha[Y_]],
                                        axis=1)
@@ -108,7 +108,6 @@ class bpm_data_type (object):
             name = self.get_bpm_name(name)
             self.name.append(name)
             self.loc.append(self.get_loc(name, lin_opt))
-            print self.loc[j]
             if prt:
                 printf(' %s', self.name[j])
                 if (j+1) % n_print == 0: printf('\n')
@@ -236,55 +235,49 @@ def DFT(x, n, sgn):
     for j in range(n/2+1):
 	X[j] = 0e0
 	for k in range(0, n):
-	    X[j] += x[2*k]*math.exp(sgn*I*2e0*np.pi*(k*j)/float(n))
-    for j in range(n/2):
-	x[2*j] = real(X[j]); x[2*j+1] = imag(X[j])
+	    X[j] += x[k]*math.exp(sgn*I*2e0*np.pi*float(k*j)/float(n))
+    return [X.real, X.imag]
 
 
-def FFT1(n, x, A, phi, window):
-    xi = np.zeros(2*n)
+def FFT1(n, x, window):
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
-	    xi[2*i] = x[i]
+	    pass
 	elif window == 2:
 	    # Sine.
-	    xi[2*i] =	math.sin(float(i)/float(n-1)*np.pi)*x[i]
+	    x[i] *= math.sin(float(i)/float(n-1)*np.pi)
 	    break
 	elif window == 3:
 	    # Sine^2.
-	    xi[2*i] = sqr(math.sin(flaot(i)/float(n-1)*np.pi))*x[i]
+	    x[i] *= sqr(math.sin(flaot(i)/float(n-1)*np.pi))
 	else:
-	    printf('FFT: not implemented\n')
+	    printf('FFT1: not implemented\n')
 	    exit(1)
-	xi[2*i+1] = 0e0
-    np.fft.rfft(xi)
-    A = np.zeros(2*n); phi = np.zeros(2*n)
-    for i in range(n):
-	A[i] = math.sqrt(sqr(xi[2*i])+sqr(xi[2*i+1]))*2e0/n
-	phi[i] = -math.atan2(xi[2*i+1], xi[2*i])
+    x = np.fft.rfft(x)
+    A = np.zeros(n); phi = np.zeros(n)
+    for i in range(n/2+1):
+	A[i] = math.sqrt(sqr(x[i].real)+sqr(x[i].imag))*2e0/n
+        phi[i] = cmath.phase(x[i])
+    return [A, phi]
 
 
-def FFT2(n, x, X, window):
-    xi = np.zeros(2*n)
+def FFT2(n, x, window):
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
-	    xi[2*i] = x[i]
+	    pass
 	elif window == 2:
 	    # Sine.
-	    xi[2*i] =	math.sin(float(i)/float(n-1)*np.pi)*x[i]
+	    x[i] *= math.sin(float(i)/float(n-1)*np.pi)
 	elif window == 3:
 	    # Sine^2.
-	    xi[2*i] =	sqr(math.sin(flaot(i)/float(n-1)*np.pi))*x[i]
+	    x[i] *= sqr(math.sin(flaot(i)/float(n-1)*np.pi))
 	else:
-	    cout << 'FFT: not implemented' << '\n'
+	    cout << 'FFT2: not implemented' << '\n'
 	    exit(1)
-
-	xi[2*i+1] = 0e0
-    np.fft.rfft(xi, 1)
-    for i in range(0, n):
-	X[i] = complex(xi[2*i+1], xi[2*i])
+    x = np.fft.rfft(x)
+    return x
 
 
 def get_ind(n, k):
@@ -385,16 +378,14 @@ def get_phi(n,  k,  nu, phi):
 
 
 def get_nu2(n,  x, nu, A_nu, phi_nu, delta, alpha, window):
-    A = np.zeros(n); phi = np.zeros(n); nu = np.zeros(n)
-    FFT1(n, x, A, phi, window)
+    [A, phi] = FFT1(n, x, window)
     k = get_peak(n, A)
     nu = get_nu1(n, A, k, window)
     A_nu = get_A(n, A, nu, k, window)
     phi_nu = get_phi(n, k, nu, phi)
     # Rectangular window.
-    X = np.zeros(n, dtype=complex)
-    FFT2(n, x, X, 1)
-    get_alpha(n, X, nu, k, delta, alpha)
+    x = FFT2(n, x, 1)
+    get_alpha(n, x, nu, k, delta, alpha)
 
 
 def rm_mean(n, x):
@@ -536,7 +527,8 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 
 
 def get_m_s(n, sum, sum2, mean, sigma):
-    mean = sum/n; sigma = math.sqrt((n*sum2-sqr(sum))/(n*(n-1e0)))
+    mean = sum/n;
+    # sigma = math.sqrt((n*sum2-sqr(sum))/(n*(n-1e0)))
 
 
 def prt_FFT(n, cut, x, y, window):
@@ -549,7 +541,7 @@ def prt_FFT(n, cut, x, y, window):
 
     A = np.zeros((2, n)); phi = np.zeros((2, n))
     for k in range(0, 2):
-	FFT1(n, x1[k], A[k], phi[k], window)
+	[A[k], phi[k]] = FFT1(n, x1[k], window)
 
     outf = open('sls_fft.out', 'w')
     for k in range(n/2+1):
@@ -627,6 +619,7 @@ def main():
 
     prt_FFT(n_turn, cut, bpm_data.data[X_][bpm1-1],
 	    bpm_data.data[Y_][bpm1-1], window)
+    exit(0)
 
     # Linear optics.
     window = 2; cut = 0; n_turn = 2048
