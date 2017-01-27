@@ -108,6 +108,7 @@ class bpm_data_type (object):
             name = self.get_bpm_name(name)
             self.name.append(name)
             self.loc.append(self.get_loc(name, lin_opt))
+            print self.loc[j]
             if prt:
                 printf(' %s', self.name[j])
                 if (j+1) % n_print == 0: printf('\n')
@@ -202,7 +203,6 @@ class est_lin_opt_type (object):
                        self.dnu_mean[j][Y_], self.dnu_sigma[j][Y_])
 
         outf = open('tbt.out', 'w')
-
         dbeta = np.zeros(2); dnu = np.zeros(2)
         fprintf(outf, '\n# bpm  s [m]                 beta [m]'
                 '                           nu\n')
@@ -220,15 +220,14 @@ class est_lin_opt_type (object):
                     printf('\nBPM # %d excluded, plane = %d\n', j, k)
                     dnu[k] = 0e0; dnu_sigma[k][j] = 0e0
 
-            printf('%4d %8.3f %7.3f +/- %5.3f %7.3f +/- %5.3f'
-                   '%7.3f +/- %5.3f %7.3f +/- %5.3f %7.3f +/- %8.3f\n',
-                   j+1, lin_opt.s[loc],
-                   dbeta[X_], self.beta_sigma[X_][j],
-                   dbeta[Y_], self.beta_sigma[Y_][j],
-                   self.dnu_mean[X_][j], self.dnu_sigma[X_][j],
-                   self.dnu_mean[Y_][j], self.dnu_sigma[Y_][j],
-                   lin_opt.beta[X_][loc], lin_opt.beta[Y_][loc])
-
+            fprintf(outf, '%4d %8.3f %7.3f +/- %5.3f %7.3f +/- %5.3f'
+                    '%7.3f +/- %5.3f %7.3f +/- %5.3f %7.3f +/- %8.3f\n',
+                    j+1, lin_opt.s[loc],
+                    dbeta[X_], self.beta_sigma[X_][j],
+                    dbeta[Y_], self.beta_sigma[Y_][j],
+                    self.dnu_mean[X_][j], self.dnu_sigma[X_][j],
+                    self.dnu_mean[Y_][j], self.dnu_sigma[Y_][j],
+                    lin_opt.beta[X_][loc], lin_opt.beta[Y_][loc])
         outf.close()
 
 
