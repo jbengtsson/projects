@@ -34,8 +34,8 @@ typedef double ss_vect[ss_dim];
 
 struct lin_opt_type {
   public:
-    std::vector < std::string > names;
-    std::vector < int >locs;
+    std::vector < std::string > name;
+    std::vector < int >loc;
      std::vector < double >s, alpha[2], beta[2], nu[2], eta[2], etap[2];
 
     void rd_data(const string & file_name);
@@ -44,8 +44,8 @@ struct lin_opt_type {
 struct bpm_data_type {
   public:
     int n_bpm, n_turn;
-     std::vector < std::string > names;
-     std::vector < int >locs;
+     std::vector < std::string > name;
+     std::vector < int >loc;
      std::vector < std::vector < double >>data[2];
 
     void rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt);
@@ -87,8 +87,8 @@ int get_loc(const string & name, const lin_opt_type & lin_opt)
     k = -1;
     do {
 	k++;
-    } while ((k < (int) lin_opt.locs.size())
-	     && (name != lin_opt.names[k]));
+    } while ((k < (int) lin_opt.loc.size())
+	     && (name != lin_opt.name[k]));
     return k;
 }
 
@@ -129,9 +129,9 @@ void lin_opt_type::rd_data(const string & file_name)
 		       n, name.c_str(), s, type,
 		       alpha[X_], beta[X_], nu[X_], eta[X_], etap[X_],
 		       alpha[Y_], beta[Y_], nu[Y_], eta[Y_], etap[Y_]);
-	    this->locs.push_back(n);
+	    this->loc.push_back(n);
 	    this->s.push_back(s);
-	    this->names.push_back(name);
+	    this->name.push_back(name);
 	    for (k = 0; k < 2; k++) {
 		this->alpha[k].push_back(alpha[k]);
 		this->beta[k].push_back(beta[k]);
@@ -160,7 +160,7 @@ void get_bpm_name(string & name)
 
 void bpm_data_type::rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt)
 {
-    string line, name;
+    string line, name1;
     int j, k;
     stringstream str;
 
@@ -187,12 +187,12 @@ void bpm_data_type::rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt)
 	cout << "\n";
     for (j = 0; j < n_bpm; j++) {
 	get_line(inf, str);
-	str >> name;
-	get_bpm_name(name);
-	names.push_back(name);
-	locs.push_back(get_loc(name, lin_opt));
+	str >> name1;
+	get_bpm_name(name1);
+	name.push_back(name1);
+	loc.push_back(get_loc(name1, lin_opt));
 	if (prt) {
-	    cout << " " << names[j];
+	    cout << " " << name1[j];
 	    if ((j + 1) % n_print == 0)
 		cout << "\n";
 	}
@@ -615,7 +615,7 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
 
     printf("\n");
     for (i = 0; i < bpm_data.n_bpm; i++) {
-	loc = bpm_data.locs[i];
+	loc = bpm_data.loc[i];
 
 	for (j = 0; j < 2; j++) {
 	    for (k = cut; k < n + cut; k++)
@@ -682,7 +682,7 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
     if (prt)
 	cout << "\n bpm        A               nu            nu (model)\n";
     for (i = 0; i < bpm_data.n_bpm; i++) {
-	loc = bpm_data.locs[i];
+	loc = bpm_data.loc[i];
 
 	for (j = 0; j < 2; j++) {
 	    beta = sqr(As[i][j]) / twoJ_mean[j];
@@ -804,7 +804,7 @@ void est_lin_opt_type::get_stats(const bpm_data_type & bpm_data,
     outf << "\n# bpm  s [m]                 beta [m]"
 	"                           nu\n";
     for (j = 0; j < bpm_data.n_bpm; j++) {
-	loc = bpm_data.locs[j];
+	loc = bpm_data.loc[j];
 	for (k = 0; k < 2; k++) {
 	    // dbeta[k] = beta_mean[k][j] - lin_opt.beta[k][loc];
 	    dbeta[k] = beta_mean[k][j];
@@ -928,8 +928,8 @@ void ss_est(const int n, const int bpm1, const int bpm2,
 
     get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu);
 
-    loc1 = bpm_data.locs[bpm1 - 1];
-    loc2 = bpm_data.locs[bpm2 - 1];
+    loc1 = bpm_data.loc[bpm1 - 1];
+    loc2 = bpm_data.loc[bpm2 - 1];
 
     cout << "\n";
     cout << scientific << setprecision(3)
