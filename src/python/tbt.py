@@ -232,44 +232,44 @@ def DFT(x, n, sgn):
 
 
 def FFT1(n, x, window):
+    x1 = np.zeros(n)
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
-	    pass
+	    x1[i] = x[i]
 	elif window == 2:
 	    # Sine.
-	    x[i] *= math.sin(float(i)/float(n-1)*np.pi)
-	    break
+	    x1[i] = math.sin(float(i)/float(n-1)*np.pi)*x[i]
 	elif window == 3:
 	    # Sine^2.
-	    x[i] *= sqr(math.sin(flaot(i)/float(n-1)*np.pi))
+	    x1[i] = sqr(math.sin(flaot(i)/float(n-1)*np.pi))*x[i]
 	else:
 	    printf('FFT1: not implemented\n')
 	    exit(1)
-    x = np.fft.rfft(x)
+    x1 = np.fft.rfft(x1)
     A = np.zeros(n/2+1); phi = np.zeros(n/2+1)
     for i in range(n/2+1):
-	A[i] = math.sqrt(sqr(x[i].real)+sqr(x[i].imag))*math.sqrt(2e0)/n
-        phi[i] = cmath.phase(x[i])
+	A[i] = math.sqrt(sqr(x1[i].real)+sqr(x1[i].imag))*2e0/n
+        phi[i] = cmath.phase(x1[i])
     return [A, phi]
 
 
 def FFT2(n, x, window):
+    x1 = np.zeros(n)
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
-	    pass
+	    x1[i] = x[i]
 	elif window == 2:
 	    # Sine.
-	    x[i] *= math.sin(float(i)/float(n-1)*np.pi)
+	    x1[i] = math.sin(float(i)/float(n-1)*np.pi)*x[i]
 	elif window == 3:
 	    # Sine^2.
-	    x[i] *= sqr(math.sin(float(i)/float(n-1)*np.pi))
+	    x1[i] = sqr(math.sin(float(i)/float(n-1)*np.pi))*x[i]
 	else:
 	    cout << 'FFT2: not implemented' << '\n'
 	    exit(1)
-    x = np.fft.rfft(x)
-    return x
+    return np.fft.rfft(x1)
 
 
 def get_ind(n, k):
@@ -306,7 +306,7 @@ def get_nu1(n, A, k, window):
 	elif window == 3:
 	    nu = (ind-1e0+3e0*A2/(A1+A2))/n
 	else:
-	    cout << 'get_nu: not defined\n'
+	    cout << 'get_nu1: not defined\n'
     else:
 	nu = 0e0
     return nu
@@ -411,7 +411,7 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 	    for k in range(cut, n+cut):
 		x[k-cut] = bpm_data.data[j][i][k]
 	    rm_mean(n, x)
-
+ 
 	    [tunes[i][j], As[i][j], phis[i][j], delta[j], alpha[j]] = \
                 get_nu2(n, x, window)
 

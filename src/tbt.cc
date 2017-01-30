@@ -530,7 +530,7 @@ int get_peak(const int n, const double A[])
 	    peak = A[ind2];
 	    k = ind2;
 	}
-    }
+   }
 
     return k;
 }
@@ -577,7 +577,7 @@ void rm_mean(long int n, double x[])
     long int i;
     double mean;
 
-    mean = 0.0;
+    mean = 0e0;
     for (i = 0; i < n; i++)
 	mean += x[i];
     mean /= n;
