@@ -398,7 +398,7 @@ FFT(const int n, const double x[], complex < double >X[], const int window)
 
 void get_ind(const int n, const int k, int &ind1, int &ind3)
 {
-    // Spectrum for real signal is irror symmetric at k = (0, n/2).
+    // Spectrum for real signal is mirror symmetric at k = (0, n/2).
     if (k == 0) {
 	ind1 = 1;
 	ind3 = 1;
