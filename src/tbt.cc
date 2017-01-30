@@ -237,9 +237,11 @@ void bpm_data_type::rd_bpm_data(const int plane, ifstream & inf)
 	if (prt) {
 	    cout << fixed << setprecision(6)
 		<< setw(10) << 1e3 * data[plane][j][k];
-	    if (k % n_print != 0)
+	    if (k % n_print == 0)
 		cout << "\n";
 	}
+	if (prt && k % n_print != 0)
+	  cout << "\n";
     }
 
 }
@@ -452,7 +454,7 @@ double get_nu(const int n, const double A[], const int k, const int window)
 
 double sinc(double omega)
 {
-    return (omega != 0.0) ? sin(omega) / omega : 1e0;
+    return (omega != 0e0) ? sin(omega) / omega : 1e0;
 }
 
 
@@ -1014,7 +1016,6 @@ int main(int argc, char *argv[])
     bpm1 = 5;
     bpm2 = 6;
 
-    bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt);
-
-    ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt);
+    // bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt);
+    // ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt);
 }
