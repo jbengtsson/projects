@@ -774,7 +774,7 @@ void est_lin_opt_type::get_stats(const bpm_data_type & bpm_data,
     double dbeta[2], dnu[2];
     ofstream outf;
 
-    const bool prt = true;
+    const bool prt = false;
     const double dbeta_max = 5.0, dnu_max = 0.05;
 
     if (prt)

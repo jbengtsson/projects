@@ -64,9 +64,11 @@ class lin_opt_type (object):
 
 class bpm_data_type (object):
     def __init__(self):
-        self.name = []
-        self.loc  = []
-        self.data = np.zeros((2, 0, 0))
+        self.n_bpm  = 0
+        self.n_turn = 0
+        self.name   = []
+        self.loc    = []
+        self.data   = np.zeros((2, 0, 0))
 
     def get_loc(self, name, lin_opt):
         k = 0
@@ -137,6 +139,7 @@ class bpm_data_type (object):
 
 class est_lin_opt_type (object):
     def __init__(self):
+        self.beta_pinger = np.zeros(2)
         self.n_stats     = 0e0
         self.alpha_mean  = np.zeros(2)
         self.alpha_sigma = np.zeros(2)
@@ -164,13 +167,11 @@ class est_lin_opt_type (object):
         self.dnu_sum.resize((2, n)); self.dnu_sum2.resize((2, n))
         self.dnu_mean.resize((2, n)); self.dnu_sigma.resize((2, n))
 
-        for j in range(0, len(self.beta_sum[X_])):
-            for k in range(2):
-                self.beta_sum[k][j] = 0e0; self.beta_sum2[k][j] = 0e0
-                self.dnu_sum[k][j] = 0e0; self.dnu_sum2[k][j] = 0e0
+        self.beta_sum[:, :] = 0e0; self.beta_sum2[:, :] = 0e0
+        self.dnu_sum[:, :] = 0e0; self.dnu_sum2[:, :] = 0e0
 
     def get_stats(self, bpm_data, lin_opt):
-        prt = True
+        prt = False
         dbeta_max = 5.0; dnu_max = 0.05
 
         if prt:
@@ -226,17 +227,16 @@ class est_lin_opt_type (object):
         outf.close()
 
 
-def DFT(x, n, sgn):
-    I = complex(0e0, 1e0)
+def DFT(x, sgn):
+    n = len(x); I = complex(0e0, 1e0); X = np.zeros(n/2+1, dtype=complex)
     for j in range(n/2+1):
-	X[j] = 0e0
 	for k in range(0, n):
-	    X[j] += x[k]*math.exp(sgn*I*2e0*np.pi*float(k*j)/float(n))
-    return [X.real, X.imag]
+	    X[j] += x[k]*cmath.exp(sgn*I*2e0*np.pi*float(k*j)/float(n))
+    return X
 
 
-def FFT1(n, x, window):
-    x1 = np.zeros(n)
+def FFT1(x, window):
+    n = len(x); x1 = np.zeros(n)
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
@@ -258,8 +258,8 @@ def FFT1(n, x, window):
     return [A, phi]
 
 
-def FFT2(n, x, window):
-    x1 = np.zeros(n)
+def FFT2(x, window):
+    n = len(x); x1 = np.zeros(n)
     for i in range(n):
 	if window == 1:
 	    # Rectangular.
@@ -373,13 +373,13 @@ def get_phi(n,  k,  nu, phi):
 
 
 def get_nu2(n, x, window):
-    [A, phi] = FFT1(n, x, window)
+    [A, phi] = FFT1(x, window)
     k = get_peak(n, A)
     nu = get_nu1(n, A, k, window)
     A_nu = get_A(n, A, nu, k, window)
     phi_nu = get_phi(n, k, nu, phi)
     # Rectangular window.
-    x = FFT2(n, x, 1)
+    x = FFT2(x, 1)
     [delta, alpha] = get_alpha(n, x, nu, k)
     return [nu, A_nu, phi_nu, delta, alpha]
 
@@ -396,7 +396,6 @@ def rm_mean(n, x):
 def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
     prt = False
     sgn = [1, -1]
-    beta_pinger = (6.92e0, 6.76e0)
 
     tune_sum  = np.zeros(2); tune_sum2  = np.zeros(2)
     alpha_sum = np.zeros(2); alpha_sum2 = np.zeros(2)
@@ -455,8 +454,8 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
            twoJ_mean[X_], twoJ_sigma[X_], twoJ_mean[Y_], twoJ_sigma[Y_],
            phi0_mean[X_], phi0_sigma[X_], phi0_mean[Y_], phi0_sigma[Y_])
     printf('A0   = [%5.3f, %5.3f] mm\n',
-           1e3*math.sqrt(twoJ_mean[X_]*beta_pinger[X_]),
-           1e3*math.sqrt(twoJ_mean[Y_]*beta_pinger[Y_]))
+           1e3*math.sqrt(twoJ_mean[X_]*est_lin_opt.beta_pinger[X_]),
+           1e3*math.sqrt(twoJ_mean[Y_]*est_lin_opt.beta_pinger[Y_]))
 
     # Normalize.
     if prt:
@@ -528,7 +527,7 @@ def prt_FFT(cut, xy, window):
 
     A = np.zeros((2, n/2+1)); phi = np.zeros((2, n/2+1))
     for k in range(0, 2):
-	[A[k], phi[k]] = FFT1(n, x1[k], window)
+	[A[k], phi[k]] = FFT1(x1[k], window)
 
     outf = open('sls_fft.out', 'w')
     for k in range(n/2+1):
@@ -546,7 +545,8 @@ def get_b1ob2_dnu(n, ps1, ps2):
     for j in range(2):
 	x1_sqr = 0e0; x2_sqr = 0e0; x1x2 = 0e0
 	for k in range(n):
-	    x1_sqr += sqr(ps1[k][2*j]); x2_sqr += sqr(ps2[k][2*j])
+	    x1_sqr += sqr(ps1[k][2*j])
+            x2_sqr += sqr(ps2[k][2*j])
 	    x1x2 += ps1[k][2*j]*ps2[k][2*j]
 
 	x1_sqr /= n; x2_sqr /= n; x1x2 /= n;
@@ -609,6 +609,7 @@ def main():
     window = 2; cut = 0; n_turn = 2048
 
     est_lin_opt.zero(len(bpm_data.loc))
+    est_lin_opt.beta_pinger = (6.92e0, 6.76e0)
 
     outf = open('tbt_optics.out', 'w')
 
