@@ -670,13 +670,13 @@ void get_nus(ofstream & outf, const int cut, const int n, const int window,
     }
 
     cout << scientific << setprecision(3)
-	<< "\ntwoJ = [" << twoJ_mean[X_] << "+/-" << twoJ_sigma[X_]
+	<< "\ntwoJ  = [" << twoJ_mean[X_] << "+/-" << twoJ_sigma[X_]
 	<< ", " << twoJ_mean[Y_] << "+/-" << twoJ_sigma[Y_] << "]"
 	<< fixed
 	<< ", phi0 = [" << phi0_mean[X_] << "+/-" << phi0_sigma[X_]
 	<< ", " << phi0_mean[Y_] << "+/-" << phi0_sigma[Y_] << "]\n";
     cout << fixed << setprecision(3)
-	<< "A0   = [" << 1e3 * sqrt(twoJ_mean[X_] *
+	<< "A0    = [" << 1e3 * sqrt(twoJ_mean[X_] *
 				    beta_pinger[X_]) << ", " << 1e3 *
 	sqrt(twoJ_mean[Y_] * beta_pinger[Y_]) << "] mm\n";
 
