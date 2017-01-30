@@ -774,12 +774,12 @@ void est_lin_opt_type::get_stats(const bpm_data_type & bpm_data,
     double dbeta[2], dnu[2];
     ofstream outf;
 
-    const bool prt = false;
+    const bool prt = true;
     const double dbeta_max = 5.0, dnu_max = 0.05;
 
     if (prt)
 	cout << "\n bpm                A                               "
-	    << "nu                              dnu\n";
+	    << "    dnu\n";
     for (j = 0; j < bpm_data.n_bpm; j++) {
 	for (k = 0; k < 2; k++) {
 	    get_m_s(n_stats, beta_sum[k][j], beta_sum2[k][j],
@@ -791,14 +791,14 @@ void est_lin_opt_type::get_stats(const bpm_data_type & bpm_data,
 	if (prt)
 	    cout << fixed << setprecision(3)
 		<< setw(3) << j + 1 << "  ["
-		<< setw(5) << beta_mean[j][X_] << "+/-"
-		<< setw(5) << beta_sigma[j][X_] << ", "
-		<< setw(4) << beta_mean[j][Y_] << "+/-"
-		<< setw(5) << beta_sigma[j][Y_] << "]  ["
-		<< setw(5) << dnu_mean[j][X_] << "+/-"
-		<< setw(5) << dnu_sigma[j][X_] << ", "
-		<< setw(4) << dnu_mean[j][Y_] << "+/-"
-		<< setw(4) << dnu_sigma[j][Y_] << "]\n";
+		<< setw(6) << beta_mean[X_][j] << "+/-"
+		<< setw(6) << beta_sigma[X_][j] << ", "
+		<< setw(6) << beta_mean[Y_][j] << "+/-"
+		<< setw(6) << beta_sigma[Y_][j] << "]  ["
+		<< setw(6) << dnu_mean[X_][j] << "+/-"
+		<< setw(5) << dnu_sigma[X_][j] << ", "
+		<< setw(6) << dnu_mean[Y_][j] << "+/-"
+		<< setw(5) << dnu_sigma[Y_][j] << "]\n";
     }
 
     outf.open("tbt.out");

@@ -170,28 +170,32 @@ class est_lin_opt_type (object):
                 self.dnu_sum[k][j] = 0e0; self.dnu_sum2[k][j] = 0e0
 
     def get_stats(self, bpm_data, lin_opt):
-        prt = False
+        prt = True
         dbeta_max = 5.0; dnu_max = 0.05
 
         if prt:
-            printf('\n bpm                A                               '
-                   'nu                              dnu\n')
+            printf('\n bpm                A'
+                   '                                   dnu\n')
+        self.beta_mean  = np.zeros((2, bpm_data.n_bpm))
+        self.beta_sigma = np.zeros((2, bpm_data.n_bpm))
+        self.dnu_mean   = np.zeros((2, bpm_data.n_bpm))
+        self.dnu_sigma  = np.zeros((2, bpm_data.n_bpm))
         for j in range(bpm_data.n_bpm):
             for k in range(2):
-                get_m_s(self.n_stats, self.beta_sum[k][j],
-                        self.beta_sum2[k][j],
-                        self.beta_mean[k][j], self.beta_sigma[k][j])
-                get_m_s(self.n_stats,
-                        self.dnu_sum[k][j], self.dnu_sum2[k][j],
-                        self.dnu_mean[k][j], self.dnu_sigma[k][j])
+                [self.beta_mean[k][j], self.beta_sigma[k][j]] = \
+                    get_m_s(self.n_stats,
+                            self.beta_sum[k][j], self.beta_sum2[k][j])
+                [self.dnu_mean[k][j], self.dnu_sigma[k][j]] = \
+                    get_m_s(self.n_stats,
+                            self.dnu_sum[k][j], self.dnu_sum2[k][j])
 
             if prt:
-                printf('%3d  [%5.3f+/-%5.3f, %4.3f+/-%5.3f]'
-                       '  [%5.3f+/-%5.3f, %4.3f+/-%4.3f]\n',
-                       j+1, self.beta_mean[j][X_], self.beta_sigma[j][X_],
-                       self.beta_mean[j][Y_], self.beta_sigma[j][Y_],
-                       self.dnu_mean[j][X_], self.dnu_sigma[j][X_],
-                       self.dnu_mean[j][Y_], self.dnu_sigma[j][Y_])
+                printf('%3d  [%6.3f+/-%6.3f, %6.3f+/-%6.3f]'
+                       '  [%6.3f+/-%5.3f, %6.3f+/-%5.3f]\n',
+                       j+1, self.beta_mean[X_][j], self.beta_sigma[X_][j],
+                       self.beta_mean[Y_][j], self.beta_sigma[Y_][j],
+                       self.dnu_mean[X_][j], self.dnu_sigma[X_][j],
+                       self.dnu_mean[Y_][j], self.dnu_sigma[Y_][j])
 
         outf = open('tbt.out', 'w')
         dbeta = np.zeros(2); dnu = np.zeros(2)
@@ -209,10 +213,10 @@ class est_lin_opt_type (object):
                          - (lin_opt.nu[k][loc]-int(lin_opt.nu[k][loc]))
                 if self.dnu_sigma[k][j] > dnu_max:
                     printf('\nBPM # %d excluded, plane = %d\n', j, k)
-                    dnu[k] = 0e0; dnu_sigma[k][j] = 0e0
+                    dnu[k] = 0e0; self.dnu_sigma[k][j] = 0e0
 
             fprintf(outf, '%4d %8.3f %7.3f +/- %5.3f %7.3f +/- %5.3f'
-                    '%7.3f +/- %5.3f %7.3f +/- %5.3f %7.3f +/- %8.3f\n',
+                    '%7.3f +/- %5.3f %7.3f +/- %5.3f %8.3f %8.3f\n',
                     j+1, lin_opt.s[loc],
                     dbeta[X_], self.beta_sigma[X_][j],
                     dbeta[Y_], self.beta_sigma[Y_][j],
@@ -427,8 +431,7 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 
 	    phi0[j] = (nus[i][j]-(lin_opt.nu[j][loc]
                                   -int(lin_opt.nu[j][loc])))*2e0*np.pi
-	    if phi0[j] < 0e0:
-		phi0[j] += 2e0*np.pi
+	    if phi0[j] < 0e0: phi0[j] += 2e0*np.pi
 	    phi0_sum[j] += phi0[j]; phi0_sum2[j] += sqr(phi0[j])
 
 	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i][X_],
@@ -480,11 +483,11 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
                 i+1, lin_opt.s[loc], dnu[X_], dnu[Y_])
 
 	if prt:
-	    fprintf('%3d  [%6.3f, %5.3f]  [%6.3f, %5.3f]  [%6.3f, %5.3f]\n',
-                    i+1, 1e3*As[i][X_], 1e3*As[i][Y_],
-                    nus[i][X_], nus[i][Y_],
-                    lin_opt.nu[X_][loc]-int(lin_opt.nu[X_][loc]),
-                    lin_opt.nu[Y_][loc]-int(lin_opt.nu[Y_][loc]))
+	    printf('%3d  [%6.3e, %5.3e]  [%6.3e, %5.3e]  [%6.3f, %5.3f]\n',
+                   i+1, 1e3*As[i][X_], 1e3*As[i][Y_],
+                   nus[i][X_], nus[i][Y_],
+                   lin_opt.nu[X_][loc]-int(lin_opt.nu[X_][loc]),
+                   lin_opt.nu[Y_][loc]-int(lin_opt.nu[Y_][loc]))
 
     for j in range(2):
 	est_lin_opt.tune_mean[j] = tune_sum[j]/bpm_data.n_bpm
@@ -509,8 +512,9 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
     printf('%8.5f %8.5f\n', nus[6][X_]-nus[5][X_], nus[6][Y_]-nus[5][Y_])
 
 
-def get_m_s(n, sum, sum2, mean, sigma):
+def get_m_s(n, sum, sum2):
     mean = sum/n; sigma = math.sqrt((n*sum2-sqr(sum))/(n*(n-1e0)))
+    return [mean, sigma]
 
 
 def prt_FFT(cut, xy, window):
@@ -604,7 +608,7 @@ def main():
     # Linear optics.
     window = 2; cut = 0; n_turn = 2048
 
-    est_lin_opt.zero(len(lin_opt.beta[X_]))
+    est_lin_opt.zero(len(bpm_data.loc))
 
     outf = open('tbt_optics.out', 'w')
 
