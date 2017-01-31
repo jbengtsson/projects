@@ -115,14 +115,14 @@ class bpm_data_type (object):
         for k in range(self.n_turn):
             if prt: printf('\n')
             data = inf.readline().strip('\n').split()
-	    # Read data for last BPM.
+	    # Read last BPM; on separate line.
             data.append(inf.readline().strip('\n').split()[0])
             self.data[plane, :, k] = 1e-3*np.array(data, dtype=float)
-            for j in range(self.n_bpm):
-                if prt:
+            if prt:
+                for j in range(self.n_bpm):
                     printf('%10.6f', 1e3*self.data[plane, j, k])
                     if (j+1) % n_print == 0: printf('\n')
-            if prt and n_bpm % n_print != 0: printf('\n')
+                if n_bpm % n_print != 0: printf('\n')
 
     def rd_tbt(self, file_name, lin_opt):
         inf = open(file_name, 'r')
@@ -391,9 +391,7 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
     for i in range(bpm_data.n_bpm):
 	loc = bpm_data.loc[i]
 	for j in range(2):
-	    for k in range(cut, n+cut):
-		x[k-cut] = bpm_data.data[j, i, k]
-	    rm_mean(n, x)
+	    x = bpm_data.data[j, i, cut:n+cut]; rm_mean(n, x)
  
 	    [tunes[i, j], As[i, j], phis[i, j], delta[j], alpha[j]] = \
                 get_nu2(n, x, window)
@@ -416,18 +414,13 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i, X_],
 	# tunes[i, Y_])
 
-    twoJ_mean = np.zeros(2); twoJ_sigma = np.zeros(2)
-    phi0_mean = np.zeros(2); phi0_sigma = np.zeros(2)
-    for j in range(2):
-	twoJ_mean[j] = twoJ_sum[j]/bpm_data.n_bpm
-        twoJ_sigma[j] = math.sqrt((bpm_data.n_bpm*twoJ_sum2[j]
-                                   -sqr(twoJ_sum[j]))
-		                  /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
+    twoJ_mean = twoJ_sum/bpm_data.n_bpm
+    twoJ_sigma = np.sqrt((bpm_data.n_bpm*twoJ_sum2-sqr(twoJ_sum))
+		         /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
-	phi0_mean[j] = phi0_sum[j]/bpm_data.n_bpm
-	phi0_sigma[j] = math.sqrt((bpm_data.n_bpm*phi0_sum2[j]
-                                   -sqr(phi0_sum[j]))
-		                  /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
+    phi0_mean = phi0_sum/bpm_data.n_bpm
+    phi0_sigma = np.sqrt((bpm_data.n_bpm*phi0_sum2-np.square(phi0_sum))
+		         /(bpm_data.n_bpm*(bpm_data.n_bpm-1e0)))
 
     printf('\ntwoJ  = [%9.3e+/-%9.3e, %9.3e+/-%9.3e]'
            ', phi0 = [%5.3f+/-%5.3f, %5.3f+/-%5.3f]\n',
@@ -499,9 +492,8 @@ def get_m_s(n, sum, sum2):
 def prt_FFT(cut, xy, window):
     n = len(xy[X_])
     outf = open('sls.out', 'w')
-    x1 = np.zeros((2, n))
+    x1 = xy[:, cut:n+cut]
     for j in range(cut, n+cut):
-	x1[:, j-cut] = [xy[X_, j], xy[Y_, j]]
 	fprintf(outf, '%5d %11.3e %11.3e\n', j+1, xy[X_, j], xy[Y_, j])
     outf.close()
 
@@ -533,9 +525,8 @@ def get_b1ob2_dnu(n, ps1, ps2):
 
 def ss_est(cut, n, bpm1, bpm2, bpm_data, lin_opt):
     ps1 = np.zeros((2, n)); ps2 = np.zeros((2, n))
-    for j in range(cut, n+cut):
-        ps1[:, j-cut] = bpm_data.data[:, bpm1-1, j]
-        ps2[:, j-cut] = bpm_data.data[:, bpm2-1, j]
+    ps1[:, :] = bpm_data.data[:, bpm1-1, cut:n+cut]
+    ps2[:, :] = bpm_data.data[:, bpm2-1, cut:n+cut]
 
     # Get estimated linear optics parameters.
     [b1ob2, dnu] = get_b1ob2_dnu(n, ps1, ps2)
