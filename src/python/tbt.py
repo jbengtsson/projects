@@ -2,6 +2,17 @@ import sys, re
 import math, cmath
 import numpy as np
 
+'''
+
+Numpy:
+
+  Arrays   a[i, j, k]
+
+  Slices   a[i:j:k], i, i+k, i+2k,..., j
+
+  Negative i, j means n+i, n+j; e.g. for n = 10, a[-2:10], 8, 9.
+
+'''
 
 # Global constants.
 X_ = 0; Y_ = 1; Z_ = 2

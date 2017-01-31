@@ -1,4 +1,4 @@
-ps = 0;
+ps = 4;
 
 f_s = 14; l_w = 2;
 if (ps == 0) \
@@ -94,12 +94,14 @@ set multiplot;
 set size 1.0, 0.5; set origin 0.0, 0.5;
 set title "Hor Floquet Space";
 set xlabel "x"; set ylabel "p_x";
-plot "tbt_phase_space.out" using 2:3 notitle w points lt 3 pointsize 0.5;
+plot "tbt_phase_space.out" using (1e3*$2):(1e3*$3) notitle w points lt 3 \
+     pointsize 0.5;
 
 set origin 0.0, 0.0;
 set title "Ver Floquet Space";
 set xlabel "y"; set ylabel "p_y";
-plot "tbt_phase_space.out" using 4:5 notitle w points lt 1 pointsize 0.5;
+plot "tbt_phase_space.out" using (1e3*$4):(1e3*$5) notitle w points lt 1 \
+     pointsize 0.5;
 
 unset multiplot;
 if (!ps) pause -1;
@@ -112,6 +114,7 @@ set size 1.0, 0.5; set origin 0.0, 0.5;
 set title "2J_x";
 set xlabel "{Symbol f}_x"; set ylabel "";
 set logscale y
+set format y "10^{%L}"
 plot "tbt_phase_space.out" using 1:6 notitle w points lt 3;
 
 set origin 0.0, 0.0;
