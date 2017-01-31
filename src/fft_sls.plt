@@ -23,25 +23,8 @@ set style line 2 lt 1 lw 1 pt 1 lc rgb "dark-green";
 set style line 3 lt 1 lw 1 pt 1 lc rgb "red";
 set style line 4 lt 1 lw 1 pt 1 lc rgb "dark-orange";
 
+
 if (ps) set output "fft_sls_1.".ext;
-
-set multiplot;
-
-set size 1.0, 0.5; set origin 0.0, 0.5;
-set title "{/Symbol Dm}_x/2{/Symbol p}";
-set xlabel "s [m]"; set ylabel "";
-set autoscale y;
-plot "tbt_optics.out" using 2:3 notitle with p ls 1;
-
-set origin 0.0, 0.0;
-set title "{/Symbol Dm}_y/2{/Symbol p}";
-set xlabel "s [m]"; set ylabel "";
-plot "tbt_optics.out" using 2:4 notitle with p ls 3;
-
-unset multiplot;
-if (!ps) pause -1;
-
-if (ps) set output "fft_sls_2.".ext;
 
 set multiplot;
 
@@ -60,7 +43,7 @@ plot "tbt.out" using 2:6:8 notitle with errorbars ls 3, \
 unset multiplot;
 if (!ps) pause -1;
 
-if (ps) set output "fft_sls_3.".ext;
+if (ps) set output "fft_sls_2.".ext;
 
 set multiplot;
 
@@ -77,7 +60,7 @@ plot "tbt.out" using 2:12:14 notitle with errorbars ls 3;
 unset multiplot;
 if (!ps) pause -1;
 
-if (ps) set output "fft_sls_4.".ext;
+if (ps) set output "fft_sls_3.".ext;
 
 set multiplot;
 
@@ -102,5 +85,39 @@ set xlabel "{/Symbol n}"; set ylabel "";
 plot "sls_fft.out" using 2:(1e3*$4) notitle with impulses ls 3;
 
 unset multiplot;
+if (!ps) pause -1;
 
+if (ps) set output "fft_sls_4.".ext;
+
+set multiplot;
+
+set size 1.0, 0.5; set origin 0.0, 0.5;
+set title "Hor Floquet Space";
+set xlabel "x"; set ylabel "p_x";
+plot "tbt_phase_space.out" using 2:3 notitle w points lt 3 pointsize 0.5;
+
+set origin 0.0, 0.0;
+set title "Ver Floquet Space";
+set xlabel "y"; set ylabel "p_y";
+plot "tbt_phase_space.out" using 4:5 notitle w points lt 1 pointsize 0.5;
+
+unset multiplot;
+if (!ps) pause -1;
+
+if (ps) set output "fft_sls_5.".ext;
+
+set multiplot;
+
+set size 1.0, 0.5; set origin 0.0, 0.5;
+set title "2J_x";
+set xlabel "{Symbol f}_x"; set ylabel "";
+set logscale y
+plot "tbt_phase_space.out" using 1:6 notitle w points lt 3;
+
+set origin 0.0, 0.0;
+set title "2J_y";
+set xlabel "{Symbol f}_y"; set ylabel "";
+plot "tbt_phase_space.out" using 1:7 notitle w points lt 1;
+
+unset multiplot;
 if (!ps) pause -1;

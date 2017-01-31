@@ -5,8 +5,7 @@ import numpy as np
 
 # Global constants.
 X_ = 0; Y_ = 1; Z_ = 2
-
-ps_dim = 6
+x_ = 0; px_ = 1; y_ = 2; py_ = 3
 
 
 def sqr(x): return x**2
@@ -116,19 +115,14 @@ class bpm_data_type (object):
         for k in range(self.n_turn):
             if prt: printf('\n')
             data = inf.readline().strip('\n').split()
-            for j in range(self.n_bpm-1):
-                self.data[plane][j][k] = 1e-3*float(data[j])
-                if prt:
-                    printf('%10.6f', 1e3*self.data[plane][j][k])
-                    if (j+1) % n_print == 0: printf('\n')
 	    # Read data for last BPM.
-            j = self.n_bpm - 1
-            data = inf.readline().strip('\n').split()[0];
-            self.data[plane][j][k] = 1e-3*float(data)
-            if prt:
-                printf('%10.6f', 1e3*self.data[plane][j][k])
-                if k % n_print == 0: printf('\n')
-            if prt and k % n_print != 0: printf('\n')
+            data.append(inf.readline().strip('\n').split()[0])
+            self.data[plane, :, k] = 1e-3*np.array(data, dtype=float)
+            for j in range(self.n_bpm):
+                if prt:
+                    printf('%10.6f', 1e3*self.data[plane, j, k])
+                    if (j+1) % n_print == 0: printf('\n')
+            if prt and n_bpm % n_print != 0: printf('\n')
 
     def rd_tbt(self, file_name, lin_opt):
         inf = open(file_name, 'r')
@@ -178,20 +172,20 @@ class est_lin_opt_type (object):
         self.dnu_sigma  = np.zeros((2, bpm_data.n_bpm))
         for j in range(bpm_data.n_bpm):
             for k in range(2):
-                [self.beta_mean[k][j], self.beta_sigma[k][j]] = \
+                [self.beta_mean[k, j], self.beta_sigma[k, j]] = \
                     get_m_s(self.n_stats,
-                            self.beta_sum[k][j], self.beta_sum2[k][j])
-                [self.dnu_mean[k][j], self.dnu_sigma[k][j]] = \
+                            self.beta_sum[k, j], self.beta_sum2[k, j])
+                [self.dnu_mean[k, j], self.dnu_sigma[k, j]] = \
                     get_m_s(self.n_stats,
-                            self.dnu_sum[k][j], self.dnu_sum2[k][j])
+                            self.dnu_sum[k, j], self.dnu_sum2[k, j])
 
             if prt:
                 printf('%3d  [%6.3f+/-%6.3f, %6.3f+/-%6.3f]'
                        '  [%6.3f+/-%5.3f, %6.3f+/-%5.3f]\n',
-                       j+1, self.beta_mean[X_][j], self.beta_sigma[X_][j],
-                       self.beta_mean[Y_][j], self.beta_sigma[Y_][j],
-                       self.dnu_mean[X_][j], self.dnu_sigma[X_][j],
-                       self.dnu_mean[Y_][j], self.dnu_sigma[Y_][j])
+                       j+1, self.beta_mean[X_, j], self.beta_sigma[X_, j],
+                       self.beta_mean[Y_, j], self.beta_sigma[Y_, j],
+                       self.dnu_mean[X_, j], self.dnu_sigma[X_, j],
+                       self.dnu_mean[Y_, j], self.dnu_sigma[Y_, j])
 
         outf = open('tbt.out', 'w')
         dbeta = np.zeros(2); dnu = np.zeros(2)
@@ -200,25 +194,25 @@ class est_lin_opt_type (object):
         for j in range(bpm_data.n_bpm):
             loc = bpm_data.loc[j]
             for k in range(2):
-                # dbeta[k] = beta_mean[k][j] - lin_opt.beta[k][loc]
-                dbeta[k] = self.beta_mean[k][j]
-                if self.beta_sigma[k][j] > dbeta_max:
-                    dbeta[k] = 0e0; self.beta_sigma[k][j] = 0e0
+                # dbeta[k] = beta_mean[k, j] - lin_opt.beta[k, loc]
+                dbeta[k] = self.beta_mean[k, j]
+                if self.beta_sigma[k, j] > dbeta_max:
+                    dbeta[k] = 0e0; self.beta_sigma[k, j] = 0e0
 
-                dnu[k] = self.dnu_mean[k][j] \
-                         - (lin_opt.nu[k][loc]-int(lin_opt.nu[k][loc]))
-                if self.dnu_sigma[k][j] > dnu_max:
+                dnu[k] = self.dnu_mean[k, j] \
+                         - (lin_opt.nu[k, loc]-int(lin_opt.nu[k, loc]))
+                if self.dnu_sigma[k, j] > dnu_max:
                     printf('\nBPM # %d excluded, plane = %d\n', j, k)
-                    dnu[k] = 0e0; self.dnu_sigma[k][j] = 0e0
+                    dnu[k] = 0e0; self.dnu_sigma[k, j] = 0e0
 
             fprintf(outf, '%4d %8.3f %7.3f +/- %5.3f %7.3f +/- %5.3f'
                     '%7.3f +/- %5.3f %7.3f +/- %5.3f %8.3f %8.3f\n',
                     j+1, lin_opt.s[loc],
-                    dbeta[X_], self.beta_sigma[X_][j],
-                    dbeta[Y_], self.beta_sigma[Y_][j],
-                    self.dnu_mean[X_][j], self.dnu_sigma[X_][j],
-                    self.dnu_mean[Y_][j], self.dnu_sigma[Y_][j],
-                    lin_opt.beta[X_][loc], lin_opt.beta[Y_][loc])
+                    dbeta[X_], self.beta_sigma[X_, j],
+                    dbeta[Y_], self.beta_sigma[Y_, j],
+                    self.dnu_mean[X_, j], self.dnu_sigma[X_, j],
+                    self.dnu_mean[Y_, j], self.dnu_sigma[Y_, j],
+                    lin_opt.beta[X_, loc], lin_opt.beta[Y_, loc])
         outf.close()
 
 
@@ -241,16 +235,13 @@ def FFT1(x, window):
 	    x1[i] = math.sin(float(i)/float(n-1)*np.pi)*x[i]
 	elif window == 3:
 	    # Sine^2.
-	    x1[i] = sqr(math.sin(flaot(i)/float(n-1)*np.pi))*x[i]
+	    x1[i] = sqr(math.sin(float(i)/float(n-1)*np.pi))*x[i]
 	else:
 	    printf('FFT1: not implemented\n')
 	    exit(1)
     x1 = np.fft.rfft(x1)
-    A = np.zeros(n/2+1); phi = np.zeros(n/2+1)
-    for i in range(n/2+1):
-	A[i] = math.sqrt(sqr(x1[i].real)+sqr(x1[i].imag))*2e0/n
-        phi[i] = cmath.phase(x1[i])
-    return [A, phi]
+    # Scale FFT by 2/n for compability with 'four1' from Numerical Recipes.
+    return [np.abs(x1)*2e0/n, np.angle(x1)]
 
 
 def FFT2(x, window):
@@ -401,29 +392,29 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
 	loc = bpm_data.loc[i]
 	for j in range(2):
 	    for k in range(cut, n+cut):
-		x[k-cut] = bpm_data.data[j][i][k]
+		x[k-cut] = bpm_data.data[j, i, k]
 	    rm_mean(n, x)
  
-	    [tunes[i][j], As[i][j], phis[i][j], delta[j], alpha[j]] = \
+	    [tunes[i, j], As[i, j], phis[i, j], delta[j], alpha[j]] = \
                 get_nu2(n, x, window)
 
-	    if sgn[j] < 0: phis[i][j] = -phis[i][j]
-	    if phis[i][j] < 0e0: phis[i][j] += 2e0*np.pi
-	    nus[i][j] = phis[i][j]/(2e0*np.pi)
+	    if sgn[j] < 0: phis[i, j] = -phis[i, j]
+	    if phis[i, j] < 0e0: phis[i, j] += 2e0*np.pi
+	    nus[i, j] = phis[i, j]/(2e0*np.pi)
 
-	    tune_sum[j] += tunes[i][j]; tune_sum2[j] += sqr(tunes[i][j])
+	    tune_sum[j] += tunes[i, j]; tune_sum2[j] += sqr(tunes[i, j])
 	    alpha_sum[j] += alpha[j]; alpha_sum2[j] += sqr(alpha[j])
 
-	    twoJ = sqr(As[i][j])/lin_opt.beta[j][loc]
+	    twoJ = sqr(As[i, j])/lin_opt.beta[j, loc]
 	    twoJ_sum[j] += twoJ; twoJ_sum2[j] += sqr(twoJ)
 
-	    phi0[j] = (nus[i][j]-(lin_opt.nu[j][loc]
-                                  -int(lin_opt.nu[j][loc])))*2e0*np.pi
+	    phi0[j] = (nus[i, j]-(lin_opt.nu[j, loc]
+                                  -int(lin_opt.nu[j, loc])))*2e0*np.pi
 	    if phi0[j] < 0e0: phi0[j] += 2e0*np.pi
 	    phi0_sum[j] += phi0[j]; phi0_sum2[j] += sqr(phi0[j])
 
-	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i][X_],
-	# tunes[i][Y_])
+	# if (prt) printf('[%8.6f, %8.6f]\n', tunes[i, X_],
+	# tunes[i, Y_])
 
     twoJ_mean = np.zeros(2); twoJ_sigma = np.zeros(2)
     phi0_mean = np.zeros(2); phi0_sigma = np.zeros(2)
@@ -453,29 +444,29 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
     for i in range(bpm_data.n_bpm):
 	loc = bpm_data.loc[i]
 	for j in range(2):
-	    beta = sqr(As[i][j])/twoJ_mean[j]
+	    beta = sqr(As[i, j])/twoJ_mean[j]
 
-	    nus[i][j] -= phi0_mean[j]/(2e0*np.pi)
-	    if nus[i][j] < 0e0:	nus[i][j] += 1e0
+	    nus[i, j] -= phi0_mean[j]/(2e0*np.pi)
+	    if nus[i, j] < 0e0:	nus[i, j] += 1e0
 
-	    dnu[j] = nus[i][j]-(lin_opt.nu[j][loc] -int(lin_opt.nu[j][loc]))
+	    dnu[j] = nus[i, j]-(lin_opt.nu[j, loc] -int(lin_opt.nu[j, loc]))
 	    if dnu[j] < -0.5e0: dnu[j] += 1e0
 	    if dnu[j] > 0.5e0:	dnu[j] -= 1e0
 
-	    est_lin_opt.beta_sum[j][i]  += beta
-	    est_lin_opt.beta_sum2[j][i] += sqr(beta)
-	    est_lin_opt.dnu_sum[j][i]   += dnu[j]
-	    est_lin_opt.dnu_sum2[j][i]  += sqr(dnu[j])
+	    est_lin_opt.beta_sum[j, i]  += beta
+	    est_lin_opt.beta_sum2[j, i] += sqr(beta)
+	    est_lin_opt.dnu_sum[j, i]   += dnu[j]
+	    est_lin_opt.dnu_sum2[j, i]  += sqr(dnu[j])
 
 	fprintf(outf, '%4d %7.3f %8.3f %8.3f\n',
                 i+1, lin_opt.s[loc], dnu[X_], dnu[Y_])
 
 	if prt:
 	    printf('%3d  [%6.3e, %5.3e]  [%6.3e, %5.3e]  [%6.3f, %5.3f]\n',
-                   i+1, 1e3*As[i][X_], 1e3*As[i][Y_],
-                   nus[i][X_], nus[i][Y_],
-                   lin_opt.nu[X_][loc]-int(lin_opt.nu[X_][loc]),
-                   lin_opt.nu[Y_][loc]-int(lin_opt.nu[Y_][loc]))
+                   i+1, 1e3*As[i, X_], 1e3*As[i, Y_],
+                   nus[i, X_], nus[i, Y_],
+                   lin_opt.nu[X_, loc]-int(lin_opt.nu[X_, loc]),
+                   lin_opt.nu[Y_, loc]-int(lin_opt.nu[Y_, loc]))
 
     for j in range(2):
 	est_lin_opt.tune_mean[j] = tune_sum[j]/bpm_data.n_bpm
@@ -497,7 +488,7 @@ def get_nus(outf, cut, n,  window, bpm_data,  lin_opt,  est_lin_opt):
            est_lin_opt.alpha_mean[X_], est_lin_opt.alpha_sigma[X_],
            est_lin_opt.alpha_mean[Y_], est_lin_opt.alpha_sigma[Y_])
 
-    printf('%8.5f %8.5f\n', nus[6][X_]-nus[5][X_], nus[6][Y_]-nus[5][Y_])
+    printf('%8.5f %8.5f\n', nus[6, X_]-nus[5, X_], nus[6, Y_]-nus[5, Y_])
 
 
 def get_m_s(n, sum, sum2):
@@ -510,8 +501,8 @@ def prt_FFT(cut, xy, window):
     outf = open('sls.out', 'w')
     x1 = np.zeros((2, n))
     for j in range(cut, n+cut):
-	x1[:, j-cut] = [xy[X_][j], xy[Y_][j]]
-	fprintf(outf, '%5d %11.3e %11.3e\n', j+1, xy[X_][j], xy[Y_][j])
+	x1[:, j-cut] = [xy[X_, j], xy[Y_, j]]
+	fprintf(outf, '%5d %11.3e %11.3e\n', j+1, xy[X_, j], xy[Y_, j])
     outf.close()
 
     A = np.zeros((2, n/2+1)); phi = np.zeros((2, n/2+1))
@@ -521,41 +512,57 @@ def prt_FFT(cut, xy, window):
     outf = open('sls_fft.out', 'w')
     for k in range(n/2+1):
         fprintf(outf, '%5d %9.3e %9.3e %9.3e\n',
-                k+1, float(k)/float(n), A[X_][k], A[Y_][k])
+                k+1, float(k)/float(n), A[X_, k], A[Y_, k])
     outf.close()
 
 
 def get_b1ob2_dnu(n, ps1, ps2):
     # Estimate beta_1/beta_2 and dnu by tracking data from two adjacent BPMs.
     printf('\n')
-    b1ob2 = np.zeros(n); dnu = np.zeros(n)
-    for j in range(2):
-	x1_sqr = np.sum(sqr(ps1[j])); x2_sqr = np.sum(sqr(ps2[j]))
-	x1x2 = np.sum(ps1[j]*ps2[j])
+    b1ob2 = np.zeros(2); dnu = np.zeros(2)
+    for k in range(2):
+	x1_sqr = np.sum(sqr(ps1[k])); x2_sqr = np.sum(sqr(ps2[k]))
+	x1x2 = np.sum(ps1[k]*ps2[k])
 	x1_sqr /= n; x2_sqr /= n; x1x2 /= n
-	b1ob2[j] = x1_sqr/x2_sqr
-	dnu[j] = math.acos(x1x2/math.sqrt(x1_sqr*x2_sqr))/(2e0*np.pi)
+	b1ob2[k] = x1_sqr/x2_sqr
+	dnu[k] = math.acos(x1x2/math.sqrt(x1_sqr*x2_sqr))/(2e0*np.pi)
 
-	printf('b1ob2 = %9.3e, dnu = %5.3f\n', b1ob2[j], dnu[j])
+	printf('b1ob2 = %9.3e, dnu = %5.3f\n', b1ob2[k], dnu[k])
     return [b1ob2, dnu]
 
 
-def ss_est(n, bpm1, bpm2, bpm_data, lin_opt):
-    ps1 = np.zeros((n, 2)); ps2 = np.zeros((n, 2))
-    ps1 = bpm_data.data[:, bpm1-1, :]
-    ps2 = bpm_data.data[:, bpm2-1, :]
+def ss_est(cut, n, bpm1, bpm2, bpm_data, lin_opt):
+    ps1 = np.zeros((2, n)); ps2 = np.zeros((2, n))
+    for j in range(cut, n+cut):
+        ps1[:, j-cut] = bpm_data.data[:, bpm1-1, j]
+        ps2[:, j-cut] = bpm_data.data[:, bpm2-1, j]
 
+    # Get estimated linear optics parameters.
     [b1ob2, dnu] = get_b1ob2_dnu(n, ps1, ps2)
 
+    # Get reference linear optics parameters.
     loc1 = bpm_data.loc[bpm1-1]; loc2 = bpm_data.loc[bpm2-1]
+    beta1 = lin_opt.beta[:, loc1]
+    b1ob2 = lin_opt.beta[:, loc1]/lin_opt.beta[:, loc2]
+    dnu   = lin_opt.nu[:, loc2]-lin_opt.nu[:, loc1]
+    printf('\n')
+    for k in range(2):
+        printf('b1ob2 = %9.3e, dnu = %5.3f\n', b1ob2[k], dnu[k])
 
-    printf('\nb1ob2 = %9.3e, dnu = %5.3f\n',
-           lin_opt.beta[X_][loc1]/lin_opt.beta[X_][loc2],
-           lin_opt.nu[X_][loc2]-lin_opt.nu[X_][loc1])
-    printf('b1ob2 = %9.3e, dnu = %5.3f\n',
-           lin_opt.beta[Y_][loc1]/lin_opt.beta[Y_][loc2],
-	   lin_opt.nu[Y_][loc2]-lin_opt.nu[Y_][loc1])
-
+    outf = open('tbt_phase_space.out', 'w')
+    ps = np.zeros(4); twoJ = np.zeros(2)
+    for j in range(n):
+        for k in range(2):
+            ps[2*k] = ps1[k, j]/math.sqrt(beta1[k])
+            ps[2*k+1] = (math.sqrt(b1ob2[k])*ps2[k, j] \
+                         -ps1[k, j]*math.cos(2e0*math.pi*dnu[k])) \
+                        /(math.sqrt(beta1[k])*math.sin(2e0*math.pi*dnu[k]))
+            twoJ[k] = sqr(ps[2*k]) + sqr(ps[2*k+1])
+        fprintf(outf, '%4d', j+1)
+        fprintf(outf, '%13.5e %13.5e %13.5e %13.5e %13.5e %13.5e\n',
+                ps[x_], ps[px_], ps[y_], ps[py_], twoJ[X_], twoJ[Y_])
+    outf.close()
+    
 
 def prt_name(outf, name):
     strlen = len(name); j = 0
@@ -610,10 +617,10 @@ def main():
     est_lin_opt.get_stats(bpm_data, lin_opt)
 
     # Phase space.
-    n_turn = 2048; bpm1 = 5; bpm2 = 6
+    cut = 10; n_turn = 1024; bpm1 = 5; bpm2 = 6
 
-    bpm_data.rd_tbt(home_dir+'tbt_090513_215619.log', lin_opt)
-    ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt)
+    bpm_data.rd_tbt(home_dir+'tbt_090513_220010.log', lin_opt)
+    ss_est(cut, n_turn, bpm1, bpm2, bpm_data, lin_opt)
 
 
 main()

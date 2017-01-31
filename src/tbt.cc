@@ -896,9 +896,9 @@ get_b1ob2_dnu(const int n, const ss_vect ps1[],
 	x2_sqr = 0.0;
 	x1x2 = 0.0;
 	for (k = 0; k < n; k++) {
-	    x1_sqr += sqr(ps1[k][2 * j]);
-	    x2_sqr += sqr(ps2[k][2 * j]);
-	    x1x2 += ps1[k][2 * j] * ps2[k][2 * j];
+	    x1_sqr += sqr(ps1[k][j]);
+	    x2_sqr += sqr(ps2[k][j]);
+	    x1x2 += ps1[k][j] * ps2[k][j];
 	}
 
 	x1_sqr /= n;
@@ -924,8 +924,8 @@ void ss_est(const int n, const int bpm1, const int bpm2,
 
     for (j = 0; j < n; j++)
 	for (k = 0; k < 2; k++) {
-	    ps1[k][j] = bpm_data.data[k][bpm1 - 1][j];
-	    ps2[k][j] = bpm_data.data[k][bpm2 - 1][j];
+	    ps1[j][k] = bpm_data.data[k][bpm1 - 1][j];
+	    ps2[j][k] = bpm_data.data[k][bpm2 - 1][j];
 	}
 
     get_b1ob2_dnu(n, ps1, ps2, b1ob2, dnu);
@@ -1016,6 +1016,6 @@ int main(int argc, char *argv[])
     bpm1 = 5;
     bpm2 = 6;
 
-    // bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt);
-    // ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt);
+    bpm_data.rd_tbt("sls_tbt/tbt_090513_215619.log", lin_opt);
+    ss_est(n_turn, bpm1, bpm2, bpm_data, lin_opt);
 }
