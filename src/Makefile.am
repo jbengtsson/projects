@@ -1,6 +1,7 @@
 SUBDIRS      = ptc
 
-bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad tbt
+bin_PROGRAMS = optics dynap leac dnu touschek ibs vlad tbt \
+               max_iv_1 max_iv_2
 
 #sc_f_LINK    = gfortran -g -O0 -Wall -fbounds-check -o sc_f
 
@@ -14,6 +15,8 @@ ibs_SOURCES        = ibs.cc
 vlad_SOURCES       = vlad.cc
 tbt_SOURCES        = tbt.cc
 #m4_1_SOURCES     = m4_1.cc
+max_iv_1_SOURCES   = max_iv_1.cc
+max_iv_2_SOURCES   = max_iv_2.cc
 
 #LIBS     = -L$(TRACY_LIB)/tracy -ltracy
 # gfortran needs to be before stdc_++ for Fortran programs
