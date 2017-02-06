@@ -45,6 +45,7 @@ void quad_scan(const int n,
 	       const char *qf, const double dk_qf,
 	       const char *qd, const double dk_qd)
 {
+  // Parametric scan of gradients for unit cell.
   int    i, j, qf_num, qd_num;
   double k_qf, k_qd, k_qf_step, k_qd_step, a2, eps_x;
   FILE   *outf;
