@@ -97,7 +97,7 @@ double get_eps_x1(void)
   double       eps_x;
   ss_vect<tps> A;
 
-  const bool prt = false;
+  const bool prt = true;
 
   cav = globval.Cavity_on; emit = globval.emittance;
 
@@ -209,7 +209,7 @@ double f_match(double *b2)
   int          i, loc1, loc2, loc3;
   double       tr[2], chi2;
 
-  const double scl_eta = 1e5, scl_ksi = 1e-1,
+  const double scl_eta = 1e5,
 	       beta0[] = {3.0,     3.0},
                beta1[] = {1.35633, 1.91479};
 
@@ -237,8 +237,6 @@ double f_match(double *b2)
   chi2 += sqr(Cell[loc2].Beta[Y_]-beta1[Y_]);
   chi2 += sqr(Cell[loc3].Beta[X_]-beta0[X_]);
   chi2 += sqr(Cell[loc3].Beta[Y_]-beta0[Y_]);
-  // chi2 += sqr(scl_ksi*(h_ijklm(K_re, 1, 1, 0, 0, 1)));
-  // chi2 += sqr(scl_ksi*(h_ijklm(K_re, 0, 0, 1, 1, 1)));
   if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
   for (i = 1; i <= b2_prms.n_prm; i++) {
     if (b2[i] < b2_prms.bn_min[i-1]) chi2 += 1e10;
@@ -247,11 +245,10 @@ double f_match(double *b2)
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
-    printf("b:    %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f %10.3e %10.3e\n",
+    printf("b:    %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f\n",
 	   Cell[loc1].Eta[X_], Cell[loc1].Etap[X_],
 	   Cell[loc2].Beta[X_], Cell[loc2].Beta[Y_],
-	   Cell[loc3].Beta[X_], Cell[loc3].Beta[Y_],
-	   globval.Chrom[X_], globval.Chrom[Y_]);
+	   Cell[loc3].Beta[X_], Cell[loc3].Beta[Y_]);
     printf("b2s: ");
     for (i = 1; i <= b2_prms.n_prm; i++)
       printf("%9.5f", b2[i]);

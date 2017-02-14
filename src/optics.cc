@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
-  if (false)
+  if (true)
     Read_Lattice(argv[1]);
   else
     rdmfile(argv[1]);
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   prt_lat("linlat.out", globval.bpm, true, 10);
   prt_lat("chromlat.out", globval.bpm, true, 10);
 
-  // prtmfile("flat_file.dat");
+  prtmfile("flat_file.dat");
 
   if (false) get_alphac2();
 
