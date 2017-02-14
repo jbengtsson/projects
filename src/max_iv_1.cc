@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    sf = ElemIndex("sf"); sd = ElemIndex("sd");
+    sf = ElemIndex("sfh"); sd = ElemIndex("sd");
     FitChrom(sf, sd, 0e0, 0e0);
     get_bn_design_elem(sf, 1, Sext, b3[0], a3);
     get_bn_design_elem(sd, 1, Sext, b3[1], a3);

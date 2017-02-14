@@ -70,12 +70,12 @@ int main(int argc, char *argv[])
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
-  if (true)
+  if (false)
     Read_Lattice(argv[1]);
   else
     rdmfile(argv[1]);
 
-//   no_sxt();
+  if (true) no_sxt();
 
   // globval.Cavity_on = true;
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
   prt_lat("linlat.out", globval.bpm, true, 10);
   prt_lat("chromlat.out", globval.bpm, true, 10);
 
-  prtmfile("flat_file.dat");
+  // prtmfile("flat_file.dat");
 
   if (false) get_alphac2();
 
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
   }
 
   if (false) {
-    sf = ElemIndex("sf"); sd = ElemIndex("sd");
+    sf = ElemIndex("sfh"); sd = ElemIndex("sd");
     FitChrom(sf, sd, 0e0, 0e0);
     get_bn_design_elem(sf, 1, Sext, b3[0], a3);
     get_bn_design_elem(sd, 1, Sext, b3[1], a3);
