@@ -75,11 +75,9 @@ int main(int argc, char *argv[])
   else
     rdmfile(argv[1]);
 
-  if (true) no_sxt();
+  if (false) no_sxt();
 
-  // globval.Cavity_on = true;
-
-  Ring_GetTwiss(true, 0.0); printglob();
+  Ring_GetTwiss(true, 0e0); printglob();
 
   // prt_lat_maxlab("m4-20121107-430-bare.out", globval.bpm, true);
   prt_lat("linlat1.out", globval.bpm, true);
@@ -126,7 +124,7 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0.0); printglob();
   }
 
-  if (false) {
+  if (true) {
     globval.Cavity_on = true;
     get_dynap(delta, 25, 512, true);
   }
