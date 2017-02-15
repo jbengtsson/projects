@@ -46,7 +46,7 @@ struct bpm_data_type {
     int n_bpm, n_turn;
      std::vector < std::string > name;
      std::vector < int >loc;
-     std::vector < std::vector < double >>data[2];
+     std::vector < std::vector < double > >data[2];
 
     void rd_bpm_names(ifstream & inf, const lin_opt_type & lin_opt);
     void rd_bpm_data(const int plane, ifstream & inf);
@@ -61,7 +61,7 @@ struct est_lin_opt_type {
 	beta[2], beta_sum[2], beta_sum2[2], beta_mean[2], beta_sigma[2],
 	nu[2], dnu_sum[2], dnu_sum2[2], dnu_mean[2], dnu_sigma[2];
 
-     std::vector < std::vector < double >>twoJ[2], phi[2], phi0[2];
+     std::vector < std::vector < double > >twoJ[2], phi[2], phi0[2];
 
     void zero(const int n);
     void get_stats(const bpm_data_type & bpm_data,
@@ -104,7 +104,7 @@ void lin_opt_type::rd_data(const string & file_name)
 
     const bool prt = false;
 
-    inf.open(file_name);
+    inf.open(file_name.c_str());
 
     if (prt)
 	printf("\n");
