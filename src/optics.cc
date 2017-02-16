@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const double delta = 3e-2;
-  const double nu[] = {101.65/20.0, 27.4/20.0};
+  const double nu[] = {102.65/20.0, 27.4/20.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -89,16 +89,6 @@ int main(int argc, char *argv[])
   if (false) get_alphac2();
 
   GetEmittance(ElemIndex("cav"), true);
-
-  if (false) {
-//     str << home_dir << "/Thor-2.0/thor/wrk/fit_isoch.dat";
-//     get_bn2(str.str(), "get_b2.dat", 0, true);
-
-    str.str(""); str << "/home/johan/Thor-2.0/thor/wrk/fit_alpha.dat";
-    get_bn2(str.str(), "get_b3.dat", 0, true);
-
-    Ring_GetTwiss(true, 0.0); printglob();
-  }
 
   if (false) {
     qf = ElemIndex("qfe"); qd = ElemIndex("qde");

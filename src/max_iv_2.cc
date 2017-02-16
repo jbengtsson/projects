@@ -5,6 +5,13 @@
 int no_tps = NO;
 
 
+const double eps_x   = 15e-3,
+             nu_uc[] = {4.0/15.0, 3.0/15.0}, // Cell tune.
+             eta1_x  = 0.00336139,           // Optics at center of Bh.
+             beta0[] = {1.49008, 0.54851},   // Optics at center of SFh.
+             beta1[] = {3.0,     3.0};       // Optics at center of straight.
+
+
 struct param_type {
 private:
 
@@ -97,7 +104,7 @@ double get_eps_x1(void)
   double       eps_x;
   ss_vect<tps> A;
 
-  const bool prt = true;
+  const bool prt = false;
 
   cav = globval.Cavity_on; emit = globval.emittance;
 
@@ -169,31 +176,126 @@ void quad_scan(const int n,
 }
 
 
+void prt_emit(const param_type &b2_prms, const double *b2)
+{
+  FILE *outf;
+
+  std::string file_name = "emit.out";
+
+  outf = file_write(file_name.c_str());
+  fprintf(outf, "l2:  drift, l = %7.5f;\n\n", b2[3]);
+  fprintf(outf, "bh:  bending, l = %8.5f, t = 0.5, k = %8.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.0, N = Nbend, Method = Meth;\n",
+	  b2[4], b2[1]);
+  fprintf(outf, "qf:  quadrupole, l = 0.08, k = %8.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fclose(outf);
+}
+
+
+double f_emit(double *b2)
+{
+  // Minimize linear linear chromaticity for super period.
+  // Lattice: super period.
+
+  static double chi2_ref = 1e30;
+
+  int    i;
+  double eps1_x, tr[2], chi2;
+
+  const double scl_eps = 1e2;
+
+  b2_prms.set_prm(b2);
+
+  Ring_GetTwiss(false, 0e0); eps1_x = get_eps_x1();
+
+  tr[X_] = globval.OneTurnMat[x_][x_] + globval.OneTurnMat[px_][px_];
+  tr[Y_] = globval.OneTurnMat[y_][y_] + globval.OneTurnMat[py_][py_];
+  // printf("trace: %6.3f %6.3f\n", tr[X_], tr[Y_]);
+
+  chi2 = 0e0;
+  chi2 += sqr(scl_eps*(eps1_x-eps_x));
+  chi2 += sqr(globval.TotalTune[X_]-nu_uc[X_]);
+  chi2 += sqr(globval.TotalTune[Y_]-nu_uc[Y_]);
+
+  if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
+  for (i = 1; i <= b2_prms.n_prm; i++) {
+    if ((b2_prms.n[i-1] == -1) && (b2[i] < b2_prms.bn_min[i-1]))
+      chi2 += 1e10;
+    if (fabs(b2[i]) > b2_prms.bn_max[i-1]) chi2 += 1e10;
+  }
+
+  if (chi2 < chi2_ref) {
+    printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
+    printf("b:    %10.3e %10.5f %10.5f\n",
+	   eps1_x,
+	   globval.TotalTune[X_], globval.TotalTune[Y_]);
+    printf("b2s: ");
+    for (i = 1; i <= b2_prms.n_prm; i++)
+      printf("%9.5f", b2[i]);
+    printf("\n");
+
+    prtmfile("flat_file.fit");
+    prt_emit(b2_prms, b2);
+
+    get_S();
+    prt_lat("linlat.fit", globval.bpm, true);
+  }
+
+  chi2_ref = min(chi2, chi2_ref);
+
+  return chi2;
+}
+
+
+void fit_emit(param_type &b2_prms)
+{
+  // Minimize linear linear chromaticity for super period.
+  // Lattice: super period.
+
+  int    n_b2, i, j, iter;
+  double *b2, *b2_lim, **xi, fret;
+
+  n_b2 = b2_prms.n_prm;
+
+  b2 = dvector(1, n_b2); b2_lim = dvector(1, n_b2);
+  xi = dmatrix(1, n_b2, 1, n_b2);
+
+  b2_prms.ini_prm(b2, b2_lim);
+
+  // Set initial directions (unit vectors).
+  for (i = 1; i <= n_b2; i++)
+    for (j = 1; j <= n_b2; j++)
+      xi[i][j] = (i == j)? 1e0 : 0e0;
+
+  dpowell(b2, xi, n_b2, 1e-16, &iter, &fret, f_emit);
+
+  free_dvector(b2, 1, n_b2);  free_dvector(b2_lim, 1, n_b2);
+  free_dmatrix(xi, 1, n_b2, 1, n_b2);
+}
+
+
 void prt_match(const param_type &b2_prms, const double *b2)
 {
-  double l5h, l6, l7h, l8;
   FILE *outf;
 
   std::string file_name = "match.out";
 
   outf = file_write(file_name.c_str());
 
-  fprintf(outf, "bm:  bending, l = 0.166667, t = 0.5, k = %12.8f, t1 = 0.0"
-	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
-  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %12.8f, N = Nquad"
-	  ", Method = Meth;\n", b2[2]);
-  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %12.8f, N = Nquad"
-	  ", Method = Meth;\n", b2[3]);
-  fprintf(outf, "qm:  quadrupole, l = 0.15, k = %12.8f, N = Nquad"
-	  ", Method = Meth;\n", b2[4]);
+  fprintf(outf, "l5h: drift, l = %7.5f;\n", get_L(ElemIndex("l5h"), 1));
+  fprintf(outf, "l6:  drift, l = %7.5f;\n", get_L(ElemIndex("l6"), 1));
+  fprintf(outf, "l7h: drift, l = %7.5f;\n", get_L(ElemIndex("l7h"), 1));
+  fprintf(outf, "l8:  drift, l = %7.5f;\n", get_L(ElemIndex("l8"), 1));
 
-  l5h = get_L(ElemIndex("l5h"), 1); l6 = get_L(ElemIndex("l6"), 1);
-  l7h = get_L(ElemIndex("l7h"), 1); l8 = get_L(ElemIndex("l8"), 1);
-  
-  fprintf(outf, "\nl5h: drift, l = %10.8f;\n", l5h);
-  fprintf(outf, "l6:  drift, l = %10.8f;\n", l6);
-  fprintf(outf, "l7h: drift, l = %10.8f;\n", l7h);
-  fprintf(outf, "l8:  drift, l = %10.8f;\n", l8);
+  fprintf(outf, "\nbm:  bending, l = 0.13651, t = 0.5, k = %9.5f, t1 = 0.0"
+	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[2]);
+  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[3]);
+  fprintf(outf, "qm:  quadrupole, l = 0.2,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[4]);
 
   fclose(outf);
 }
@@ -206,21 +308,21 @@ double f_match(double *b2)
 
   static double chi2_ref = 1e30;
 
-  int          i, loc1, loc2, loc3;
+  int          i, loc1, loc2, loc3, loc4;
   double       tr[2], chi2;
 
-  const double scl_eta = 1e3, scl_beta = 1e0, scl_ksi = 1e-1,
-               beta0[] = {3.0,     3.0},     // Optics at center of straight.
-               beta1[] = {1.35633, 1.91479}; // Optics at center of SFh.
+  const double scl_eta = 1e3, scl_beta = 1e0, scl_ksi = 1e-2;
 
   b2_prms.set_prm(b2);
 
-  // Zero dispersion after 2nd BM.
-  loc1 = Elem_GetPos(ElemIndex("bm"), 2);
-  // Optics at center of dipole.
+  // Dispersion at center of Bh.
+  loc1 = Elem_GetPos(ElemIndex("bh"), 1);
+  // Optics at center of SFh.
   loc2 = Elem_GetPos(ElemIndex("sfh"), 1);
+  // Zero dispersion after 2nd BM.
+  loc3 = Elem_GetPos(ElemIndex("bm"), 2);
   // Optics at center of straight.
-  loc3 = globval.Cell_nLoc;
+  loc4 = globval.Cell_nLoc;
 
   Ring_GetTwiss(true, 0e0);
 
@@ -229,13 +331,14 @@ double f_match(double *b2)
   // printf("trace: %6.3f %6.3f\n", tr[X_], tr[Y_]);
 
   chi2 = 0e0;
-  chi2 += sqr(scl_eta*Cell[loc1].Eta[X_]);
+  chi2 += sqr(scl_eta*(Cell[loc1].Eta[X_]-eta1_x));
   chi2 += sqr(scl_eta*Cell[loc1].Etap[X_]);
-  chi2 += sqr(scl_eta*Cell[loc2].Etap[X_]);
-  chi2 += sqr(Cell[loc2].Beta[X_]-beta1[X_]);
-  chi2 += sqr(Cell[loc2].Beta[Y_]-beta1[Y_]);
-  chi2 += sqr(scl_beta*Cell[loc3].Beta[X_]-beta0[X_]);
-  chi2 += sqr(scl_beta*Cell[loc3].Beta[Y_]-beta0[Y_]);
+  chi2 += sqr(Cell[loc2].Beta[X_]-beta0[X_]);
+  chi2 += sqr(Cell[loc2].Beta[Y_]-beta0[Y_]);
+  chi2 += sqr(scl_eta*Cell[loc3].Eta[X_]);
+  chi2 += sqr(scl_eta*Cell[loc3].Etap[X_]);
+  chi2 += sqr(scl_beta*Cell[loc4].Beta[X_]-beta1[X_]);
+  chi2 += sqr(scl_beta*Cell[loc4].Beta[Y_]-beta1[Y_]);
   chi2 += sqr(scl_ksi*globval.Chrom[X_]);
   chi2 += sqr(scl_ksi*globval.Chrom[Y_]);
 
@@ -248,10 +351,11 @@ double f_match(double *b2)
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
-    printf("b:    %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f %8.3f %8.3f\n",
-	   Cell[loc1].Eta[X_], Cell[loc1].Etap[X_],
+    printf("b:    %10.3e %10.3e %8.3f %8.3f %10.3e %10.3e %8.3f %8.3f %8.3f %8.3f\n",
+	   Cell[loc1].Etap[X_], Cell[loc1].Etap[X_],
 	   Cell[loc2].Beta[X_], Cell[loc2].Beta[Y_],
-	   Cell[loc3].Beta[X_], Cell[loc3].Beta[Y_],
+	   Cell[loc3].Eta[X_], Cell[loc3].Etap[X_],
+	   Cell[loc4].Beta[X_], Cell[loc4].Beta[Y_],
 	   globval.Chrom[X_], globval.Chrom[Y_]);
     printf("b2s: ");
     for (i = 1; i <= b2_prms.n_prm; i++)
@@ -319,6 +423,18 @@ int main(int argc, char *argv[])
   }
 
   if (false) quad_scan(10, "qf", 3e0, "bh", 2e0);
+
+  if (false) {
+    b2_prms.add_prm("bh",  2, 0.0, 25.0,  1.0);
+    b2_prms.add_prm("qf",  2, 0.0, 25.0,  1.0);
+    b2_prms.add_prm("l2", -1, 0.05, 0.35, 0.01);
+    b2_prms.add_prm("bh", -1, 0.05, 0.3,  0.01);
+
+    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-8; b2_prms.step = 0.001;
+
+    no_sxt();
+    fit_emit(b2_prms);
+  }
 
   if (true) {
     b2_prms.add_prm("bm",   2, 0.0, 25.0, 1.0);
