@@ -7,6 +7,9 @@ int  no_tps = NO;
 
 int main(int argc, char *argv[])
 {
+  
+  const double A_max[] = {2.5e-3, 2.5e-3}, delta_max = 3e-2;
+
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
@@ -19,5 +22,5 @@ int main(int argc, char *argv[])
 
   globval.EPU = false;
 
-  dnu_dA(2e-3, 2e-3, 0e0, 25); get_ksi2(3e-2);
+  dnu_dA(A_max[X_], A_max[Y_], 0e0, 25); get_ksi2(delta_max);
 }

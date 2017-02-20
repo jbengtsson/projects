@@ -141,6 +141,8 @@ int main(int argc, char *argv[])
 {
   int  k;
 
+  const double A_max[] = {2.5e-3, 2.5e-3}, delta_max = 3e-2;
+
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
@@ -165,11 +167,10 @@ int main(int argc, char *argv[])
   k = atoi(argv[2]);
   if (k == 1) {
     std::cout << "fmap" << std::endl;
-//    fmap(15e-3, 6.5e-3);
-    fmap(2e-3, 2e-3);
+    fmap(A_max[X_], A_max[Y_]);
   } else if (k == 2) {
     std::cout << "fmapdp" << std::endl;
-    fmapdp(0.1e-3, 3e-2);
+    fmapdp(0.1e-3, delta_max);
   } else {
     std::cout << "bad param.: k = " << k << std::endl;
     exit(1);
