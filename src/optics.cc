@@ -59,11 +59,11 @@ void prt_lat_maxlab(const char *fname, const int Fnum, const bool all)
 int main(int argc, char *argv[])
 {
   int           qf, qd, sf, sd;
-  double        b2[2], a2, b3[2], a3;
+  double        b2[2], a2, b3[2], b3L[2], a3, a3L;
   ostringstream str;
 
   const double delta = 3e-2;
-  const double nu[] = {102.65/20.0, 27.4/20.0};
+  const double nu[] = {102.65/20.0, 68.4/20.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -108,8 +108,11 @@ int main(int argc, char *argv[])
     FitChrom(sf, sd, 0e0, 0e0);
     get_bn_design_elem(sf, 1, Sext, b3[0], a3);
     get_bn_design_elem(sd, 1, Sext, b3[1], a3);
+    get_bnL_design_elem(sf, 1, Sext, b3L[0], a3L);
+    get_bnL_design_elem(sd, 1, Sext, b3L[1], a3L);
 
-    printf("\nsf = %10.5f, sd = %10.5f", b3[0], b3[1]);
+    printf("\nsf = %10.5f (%10.5f), sd = %10.5f (%10.5f)",
+	   b3[0], b3L[0], b3[1], b3L[1]);
 
     Ring_GetTwiss(true, 0.0); printglob();
   }
