@@ -63,28 +63,21 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const double delta = 3e-2;
-  const double nu[] = {102.65/20.0, 68.4/20.0};
+  const double nu[] = {102.3/20.0, 68.4/20.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
-  if (true)
+  if (false)
     Read_Lattice(argv[1]);
   else
     rdmfile(argv[1]);
 
-  if (true) no_sxt();
+  if (false) no_sxt();
 
   Ring_GetTwiss(true, 0e0); printglob();
-
-  // prt_lat_maxlab("m4-20121107-430-bare.out", globval.bpm, true);
-  prt_lat("linlat1.out", globval.bpm, true);
-  prt_lat("linlat.out", globval.bpm, true, 10);
-  prt_lat("chromlat.out", globval.bpm, true, 10);
-
-  prtmfile("flat_file.dat");
 
   if (false) get_alphac2();
 
@@ -116,6 +109,13 @@ int main(int argc, char *argv[])
 
     Ring_GetTwiss(true, 0.0); printglob();
   }
+
+  prtmfile("flat_file.dat");
+
+  // prt_lat_maxlab("m4-20121107-430-bare.out", globval.bpm, true);
+  prt_lat("linlat1.out", globval.bpm, true);
+  prt_lat("linlat.out", globval.bpm, true, 10);
+  prt_lat("chromlat.out", globval.bpm, true, 10);
 
   if (false) {
     globval.Cavity_on = true;

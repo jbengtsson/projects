@@ -7,8 +7,8 @@ int no_tps = NO;
 
 const double eps_x       = 15e-3,
              nu_uc[]     = {4.0/15.0, 3.0/15.0}, // Cell tune.
-             L_uc        = 1.2,                  // Unit cell length.
-             L_ss        = 11.0,                 /* Super period length;
+             L_uc        = 1.25,                 // Unit cell length.
+             L_ss        = 10.5,                 /* Super period length;
                                                     with one unit cell. */
              eta_cuc[]   = {0.00920897, 0.0},    // Center of unit cell.
              etap_cuc[]  = {0.0, 0.0},           // Center of unit cell.
@@ -330,12 +330,12 @@ void prt_match(const param_type &b2_prms, const double *b2)
 
   fprintf(outf, "\nbm:  bending, l = 0.14559, t = 0.5, k = %9.5f, t1 = 0.0"
 	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
+  fprintf(outf, "qm:  quadrupole, l = 0.2,  k = %9.5f, N = Nquad"
+	  ", Method = Meth;\n", b2[4]);
   fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
 	  ", Method = Meth;\n", b2[2]);
   fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
 	  ", Method = Meth;\n", b2[3]);
-  fprintf(outf, "qm:  quadrupole, l = 0.2,  k = %9.5f, N = Nquad"
-	  ", Method = Meth;\n", b2[4]);
 
   fclose(outf);
 }
@@ -442,8 +442,8 @@ double f_match(double *b2)
   int          i, loc1, loc2, loc3;
   double       tr[2], chi2;
 
-  const double scl_eta = 1e3, scl_alpha = 1e2, scl_beta = 1e0,
-               scl_L   = 1e0, scl_ksi   = 1e-1;
+  const double scl_eta = 1e4, scl_alpha = 1e1, scl_beta = 1e1,
+               scl_L   = 1e1, scl_ksi   = 5e-1;
 
   b2_prms.set_prm(b2);
 
@@ -495,7 +495,7 @@ double f_match(double *b2)
 	   globval.Chrom[X_], globval.Chrom[Y_]);
     printf("b2s: ");
     for (i = 1; i <= b2_prms.n_prm; i++)
-      printf("%9.5f", b2[i]);
+      printf(" %9.5f", b2[i]);
     printf("\n");
 
     prtmfile("flat_file.fit");
