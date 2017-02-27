@@ -7,9 +7,10 @@ int no_tps = NO;
 
 const double eps_x       = 15e-3,
              nu_uc[]     = {4.0/15.0, 3.0/15.0}, // Cell tune.
-             L_uc        = 1.2,                  // Unit Cell length.
-             L_ss        = 14.0,                 // Unit Cell length.
-             eta_cuc[]   = {0.00357357, 0.0},    // Center of unit cell.
+             L_uc        = 1.2,                  // Unit cell length.
+             L_ss        = 11.0,                 /* Super period length;
+                                                    with one unit cell. */
+             eta_cuc[]   = {0.00920897, 0.0},    // Center of unit cell.
              etap_cuc[]  = {0.0, 0.0},           // Center of unit cell.
              alpha_cuc[] = {0.0, 0.0},           // Center of unit cell.
              beta_cuc[]  = {1.59916, 0.57961},
@@ -276,7 +277,8 @@ double f_emit(double *b2)
     prt_emit(b2_prms, b2);
 
     get_S();
-    prt_lat("linlat.fit", globval.bpm, true);
+    prt_lat("linlat1.out", globval.bpm, true);
+    prt_lat("linlat.out", globval.bpm, true, 10);
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -350,7 +352,7 @@ double f_hcell(double *b2)
   double       tr[2], chi2;
   ss_vect<tps> A;
 
-  const double scl_eta = 1e4, scl_alpha = 1e0, scl_beta = 1e0, scl_L = 0e1;
+  const double scl_eta = 1e4, scl_alpha = 1e1, scl_beta = 1e0, scl_L = 0e1;
 
   b2_prms.set_prm(b2);
 
@@ -405,7 +407,7 @@ double f_hcell(double *b2)
 
 void fit_hcell(param_type &b2_prms)
 {
-  // Minimize Optimize super period.
+  // Match half super period.
   // Lattice: super period.
 
   int    n_b2, i, j, iter;
@@ -437,22 +439,20 @@ double f_match(double *b2)
 
   static double chi2_ref = 1e30;
 
-  int          i, loc1, loc2, loc3, loc4;
+  int          i, loc1, loc2, loc3;
   double       tr[2], chi2;
 
   const double scl_eta = 1e3, scl_alpha = 1e2, scl_beta = 1e0,
-               scl_L   = 0e1, scl_ksi   = 0e-2;
+               scl_L   = 1e0, scl_ksi   = 1e-1;
 
   b2_prms.set_prm(b2);
 
-  // Dispersion at center of Bh.
-  loc1 = Elem_GetPos(ElemIndex("bh"), 1);
-  // Optics at center of SFh.
-  loc2 = Elem_GetPos(ElemIndex("sfh"), 1);
-  // Zero dispersion after 2nd BM.
-  loc3 = Elem_GetPos(ElemIndex("bm"), 2);
-  // Optics at center of straight.
-  loc4 = globval.Cell_nLoc;
+  // Center of unit cell.
+  loc1 = Elem_GetPos(ElemIndex("sfh"), 1);
+  // End of 2nd bm.
+  loc2 = Elem_GetPos(ElemIndex("bm"), 2);
+  // Center of straight.
+  loc3 = globval.Cell_nLoc;
 
   Ring_GetTwiss(true, 0e0);
 
@@ -461,19 +461,19 @@ double f_match(double *b2)
   // printf("trace: %6.3f %6.3f\n", tr[X_], tr[Y_]);
 
   chi2 = 0e0;
-  // chi2 += sqr(scl_eta*(Cell[loc1].Eta[X_]-eta_bh_x));
-  // chi2 += sqr(scl_eta*Cell[loc1].Etap[X_]);
-  // chi2 += sqr(scl_alpha*(Cell[loc1].Alpha[X_]-alpha_bh[X_]));
-  // chi2 += sqr(scl_alpha*(Cell[loc1].Alpha[Y_]-alpha_bh[Y_]));
-  // chi2 += sqr(scl_beta*(Cell[loc2].Beta[X_]-beta_sfh[X_]));
-  // chi2 += sqr(scl_beta*(Cell[loc2].Beta[Y_]-beta_sfh[Y_]));
-  // chi2 += sqr(scl_eta*Cell[loc3].Eta[X_]);
-  // chi2 += sqr(scl_eta*Cell[loc3].Etap[X_]);
-  // chi2 += sqr(scl_beta*(Cell[loc4].Beta[X_]-beta_cs[X_]));
-  // chi2 += sqr(scl_beta*(Cell[loc4].Beta[Y_]-beta_cs[Y_]));
-  // chi2 += sqr(scl_L*(Cell[globval.Cell_nLoc].S-L_ss));
-  // chi2 += sqr(scl_ksi*globval.Chrom[X_]);
-  // chi2 += sqr(scl_ksi*globval.Chrom[Y_]);
+  chi2 += sqr(scl_eta*(Cell[loc1].Eta[X_]-eta_cuc[X_]));
+  chi2 += sqr(scl_eta*Cell[loc1].Etap[X_]);
+  chi2 += sqr(scl_alpha*(Cell[loc1].Alpha[X_]-alpha_cuc[X_]));
+  chi2 += sqr(scl_alpha*(Cell[loc1].Alpha[Y_]-alpha_cuc[Y_]));
+  chi2 += sqr(scl_beta*(Cell[loc1].Beta[X_]-beta_cuc[X_]));
+  chi2 += sqr(scl_beta*(Cell[loc1].Beta[Y_]-beta_cuc[Y_]));
+  chi2 += sqr(scl_eta*Cell[loc2].Eta[X_]);
+  chi2 += sqr(scl_eta*Cell[loc2].Etap[X_]);
+  chi2 += sqr(scl_beta*(Cell[loc3].Beta[X_]-beta_cs[X_]));
+  chi2 += sqr(scl_beta*(Cell[loc3].Beta[Y_]-beta_cs[Y_]));
+  chi2 += sqr(scl_L*(Cell[globval.Cell_nLoc].S-L_ss));
+  chi2 += sqr(scl_ksi*globval.Chrom[X_]);
+  chi2 += sqr(scl_ksi*globval.Chrom[Y_]);
 
   if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
   for (i = 1; i <= b2_prms.n_prm; i++) {
@@ -484,13 +484,13 @@ double f_match(double *b2)
 
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
-    printf("b: %10.3e %10.3e %10.3e %10.3e %10.5f %10.5f  %10.3e %10.3e"
-	   "   %10.5f %10.5f\n %10.5f %10.5f %10.5f\n",
+    printf("b: %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e"
+	   " %10.5f %10.5f\n %10.5f %10.5f %10.5f\n",
 	   Cell[loc1].Etap[X_],  Cell[loc1].Etap[X_],
 	   Cell[loc1].Alpha[X_], Cell[loc1].Alpha[Y_],
-	   Cell[loc2].Beta[X_],  Cell[loc2].Beta[Y_],
-	   Cell[loc3].Eta[X_],   Cell[loc3].Etap[X_],
-	   Cell[loc4].Beta[X_],  Cell[loc4].Beta[Y_],
+	   Cell[loc1].Beta[X_]-beta_cuc[X_], Cell[loc1].Beta[Y_]-beta_cuc[Y_],
+	   Cell[loc2].Eta[X_], Cell[loc2].Etap[X_],
+	   Cell[loc3].Beta[X_], Cell[loc3].Beta[Y_],
 	   Cell[globval.Cell_nLoc].S,
 	   globval.Chrom[X_], globval.Chrom[Y_]);
     printf("b2s: ");
@@ -501,7 +501,8 @@ double f_match(double *b2)
     prtmfile("flat_file.fit");
     prt_match(b2_prms, b2);
 
-    prt_lat("linlat.fit", globval.bpm, true);
+    prt_lat("linlat1.out", globval.bpm, true);
+    prt_lat("linlat.out", globval.bpm, true, 10);
   }
 
   chi2_ref = min(chi2, chi2_ref);
@@ -572,22 +573,6 @@ int main(int argc, char *argv[])
     fit_emit(b2_prms);
   }
 
-  if (true) {
-    b2_prms.add_prm("bm",   2, 0.0, 25.0, 1.0);
-    b2_prms.add_prm("qfe",  2, 0.0, 25.0, 1.0);
-    b2_prms.add_prm("qde",  2, 0.0, 25.0, 1.0);
-    b2_prms.add_prm("qm",   2, 0.0, 25.0, 1.0);
-
-    b2_prms.add_prm("l5h", -1, 0.05, 1.0,  0.01);
-    b2_prms.add_prm("l6",  -1, 0.05, 1.0,  0.01);
-    b2_prms.add_prm("l7",  -1, 0.05, 1.0,  0.01);
-
-    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-8; b2_prms.step = 1.0;
-
-    no_sxt();
-    fit_hcell(b2_prms);
-  }
-
   if (false) {
     b2_prms.add_prm("bm",   2, 0.0, 25.0, 1.0);
     b2_prms.add_prm("qfe",  2, 0.0, 25.0, 1.0);
@@ -597,8 +582,24 @@ int main(int argc, char *argv[])
     b2_prms.add_prm("l5h", -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l6",  -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l7",  -1, 0.05, 1.0,  0.01);
-    // b2_prms.add_prm("l7h", -1, 0.05, 1.0,  0.01);
-    // b2_prms.add_prm("l8",  -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l8",  -1, 0.05, 1.0,  0.01);
+
+    b2_prms.bn_tol = 1e-6; b2_prms.svd_cut = 1e-8; b2_prms.step = 1.0;
+
+    no_sxt();
+    fit_hcell(b2_prms);
+  }
+
+  if (true) {
+    b2_prms.add_prm("bm",   2, 0.0, 25.0, 1.0);
+    b2_prms.add_prm("qfe",  2, 0.0, 25.0, 1.0);
+    b2_prms.add_prm("qde",  2, 0.0, 25.0, 1.0);
+    b2_prms.add_prm("qm",   2, 0.0, 25.0, 1.0);
+
+    b2_prms.add_prm("l5h", -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l6",  -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l7",  -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l8",  -1, 0.05, 1.0,  0.01);
 
     // b2_prms.add_prm("bm",  -2,  0.05, 0.5, 1.0);
     // b2_prms.add_prm("qde", -2,  0.05, 0.5, 1.0);

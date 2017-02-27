@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
   else
     rdmfile(argv[1]);
 
-  if (false) no_sxt();
+  if (true) no_sxt();
 
   Ring_GetTwiss(true, 0e0); printglob();
 
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0.0); printglob();
   }
 
-  if (true) {
+  if (false) {
     globval.Cavity_on = true;
     get_dynap(delta, 25, 512, true);
   }
