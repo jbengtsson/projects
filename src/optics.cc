@@ -63,14 +63,14 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const double delta = 3e-2;
-  const double nu[] = {102.3/20.0, 68.4/20.0};
+  const double nu[] = {5.0+1.0/7.0, 3.0+3.0/7.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.bpm         = 0;
 
-  if (false)
+  if (true)
     Read_Lattice(argv[1]);
   else
     rdmfile(argv[1]);
@@ -80,6 +80,13 @@ int main(int argc, char *argv[])
   Ring_GetTwiss(true, 0e0); printglob();
 
   if (false) get_alphac2();
+
+  prtmfile("flat_file.dat");
+
+  // prt_lat_maxlab("m4-20121107-430-bare.out", globval.bpm, true);
+  prt_lat("linlat1.out", globval.bpm, true);
+  prt_lat("linlat.out", globval.bpm, true, 10);
+  prt_lat("chromlat.out", globval.bpm, true, 10);
 
   GetEmittance(ElemIndex("cav"), true);
 
@@ -104,18 +111,11 @@ int main(int argc, char *argv[])
     get_bnL_design_elem(sf, 1, Sext, b3L[0], a3L);
     get_bnL_design_elem(sd, 1, Sext, b3L[1], a3L);
 
-    printf("\nsf = %10.5f (%10.5f), sd = %10.5f (%10.5f)",
+    printf("\nsfh = %10.5f (%10.5f), sd = %10.5f (%10.5f)\n",
 	   b3[0], b3L[0], b3[1], b3L[1]);
 
     Ring_GetTwiss(true, 0.0); printglob();
   }
-
-  prtmfile("flat_file.dat");
-
-  // prt_lat_maxlab("m4-20121107-430-bare.out", globval.bpm, true);
-  prt_lat("linlat1.out", globval.bpm, true);
-  prt_lat("linlat.out", globval.bpm, true, 10);
-  prt_lat("chromlat.out", globval.bpm, true, 10);
 
   if (false) {
     globval.Cavity_on = true;

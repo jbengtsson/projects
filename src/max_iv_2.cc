@@ -7,6 +7,7 @@ int no_tps = NO;
 
 const double eps_x       = 15e-3,
              nu_uc[]     = {4.0/15.0, 3.0/15.0}, // Cell tune.
+             nu_sc[]     = {1.410, 0.628},       // Super period tune.
              L_uc        = 1.25,                 // Unit cell length.
              L_ss        = 10.5,                 /* Super period length;
                                                     with one unit cell. */
@@ -323,18 +324,17 @@ void prt_match(const param_type &b2_prms, const double *b2)
   outf = file_write(file_name.c_str());
 
   fprintf(outf, "l5h: drift, l = %7.5f;\n", get_L(ElemIndex("l5h"), 1));
-  fprintf(outf, "l6:  drift, l = %7.5f;\n", get_L(ElemIndex("l6"), 1));
-  // fprintf(outf, "l7h: drift, l = %7.5f;\n", get_L(ElemIndex("l7h"), 1));
+  fprintf(outf, "l6h: drift, l = %7.5f;\n", get_L(ElemIndex("l6h"), 1));
   fprintf(outf, "l7:  drift, l = %7.5f;\n", get_L(ElemIndex("l7"), 1));
   fprintf(outf, "l8:  drift, l = %7.5f;\n", get_L(ElemIndex("l8"), 1));
 
   fprintf(outf, "\nbm:  bending, l = 0.14559, t = 0.5, k = %9.5f, t1 = 0.0"
 	  ", t2 = 0.0,\n     gap = 0.00, N = Nbend, Method = Meth;\n", b2[1]);
-  fprintf(outf, "qm:  quadrupole, l = 0.2,  k = %9.5f, N = Nquad"
+  fprintf(outf, "qm:  quadrupole, l = 0.2, k = %9.5f, N = Nquad"
 	  ", Method = Meth;\n", b2[4]);
-  fprintf(outf, "qfe: quadrupole, l = 0.15, k = %9.5f, N = Nquad"
+  fprintf(outf, "qfe: quadrupole, l = 0.1, k = %9.5f, N = Nquad"
 	  ", Method = Meth;\n", b2[2]);
-  fprintf(outf, "qde: quadrupole, l = 0.1,  k = %9.5f, N = Nquad"
+  fprintf(outf, "qde: quadrupole, l = 0.1, k = %9.5f, N = Nquad"
 	  ", Method = Meth;\n", b2[3]);
 
   fclose(outf);
@@ -442,8 +442,8 @@ double f_match(double *b2)
   int          i, loc1, loc2, loc3;
   double       tr[2], chi2;
 
-  const double scl_eta = 1e4, scl_alpha = 1e1, scl_beta = 1e1,
-               scl_L   = 1e1, scl_ksi   = 5e-1;
+  const double scl_eta = 1e4, scl_alpha = 1e1,  scl_beta = 1e1,
+               scl_L   = 1e1, scl_ksi   = 5e-1, scl_nu   = 1e3;
 
   b2_prms.set_prm(b2);
 
@@ -474,6 +474,8 @@ double f_match(double *b2)
   chi2 += sqr(scl_L*(Cell[globval.Cell_nLoc].S-L_ss));
   chi2 += sqr(scl_ksi*globval.Chrom[X_]);
   chi2 += sqr(scl_ksi*globval.Chrom[Y_]);
+  chi2 += sqr(scl_nu*(globval.TotalTune[X_]-nu_sc[X_]));
+  chi2 += sqr(scl_nu*(globval.TotalTune[Y_]-nu_sc[Y_]));
 
   if ((fabs(tr[X_]) > 2e0) || (fabs(tr[Y_]) > 2e0)) chi2 += 1e10;
   for (i = 1; i <= b2_prms.n_prm; i++) {
@@ -485,14 +487,15 @@ double f_match(double *b2)
   if (chi2 < chi2_ref) {
     printf("\nchi2: %12.5e, %12.5e\n", chi2, chi2_ref);
     printf("b: %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e %10.3e"
-	   " %10.5f %10.5f\n %10.5f %10.5f %10.5f\n",
+	   " %10.5f %10.5f\n %10.5f %10.5f %10.5f %10.5f %10.5f\n",
 	   Cell[loc1].Etap[X_],  Cell[loc1].Etap[X_],
 	   Cell[loc1].Alpha[X_], Cell[loc1].Alpha[Y_],
 	   Cell[loc1].Beta[X_]-beta_cuc[X_], Cell[loc1].Beta[Y_]-beta_cuc[Y_],
 	   Cell[loc2].Eta[X_], Cell[loc2].Etap[X_],
 	   Cell[loc3].Beta[X_], Cell[loc3].Beta[Y_],
 	   Cell[globval.Cell_nLoc].S,
-	   globval.Chrom[X_], globval.Chrom[Y_]);
+	   globval.Chrom[X_], globval.Chrom[Y_],
+	   globval.TotalTune[X_], globval.TotalTune[Y_]);
     printf("b2s: ");
     for (i = 1; i <= b2_prms.n_prm; i++)
       printf(" %9.5f", b2[i]);
@@ -580,7 +583,7 @@ int main(int argc, char *argv[])
     b2_prms.add_prm("qm",   2, 0.0, 25.0, 1.0);
 
     b2_prms.add_prm("l5h", -1, 0.05, 1.0,  0.01);
-    b2_prms.add_prm("l6",  -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l6h", -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l7",  -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l8",  -1, 0.05, 1.0,  0.01);
 
@@ -592,12 +595,12 @@ int main(int argc, char *argv[])
 
   if (true) {
     b2_prms.add_prm("bm",   2, 0.0, 25.0, 1.0);
+    b2_prms.add_prm("qm",   2, 0.0, 25.0, 1.0);
     b2_prms.add_prm("qfe",  2, 0.0, 25.0, 1.0);
     b2_prms.add_prm("qde",  2, 0.0, 25.0, 1.0);
-    b2_prms.add_prm("qm",   2, 0.0, 25.0, 1.0);
 
     b2_prms.add_prm("l5h", -1, 0.05, 1.0,  0.01);
-    b2_prms.add_prm("l6",  -1, 0.05, 1.0,  0.01);
+    b2_prms.add_prm("l6h", -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l7",  -1, 0.05, 1.0,  0.01);
     b2_prms.add_prm("l8",  -1, 0.05, 1.0,  0.01);
 
