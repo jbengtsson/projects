@@ -56,14 +56,87 @@ void prt_lat_maxlab(const char *fname, const int Fnum, const bool all)
 }
 
 
+void get_cod_rms(const double dx, const double dy,
+		 const int n_seed, const bool all)
+{
+  bool                cod;
+  int                 i, j, k, n, n_cod;
+  std::vector<double> x1[6], x2[6], x_mean[6], x_sigma[6];
+  FILE                *fp;
+
+  const int n_cod_corr = 5;
+
+  globval.Cavity_on = false;
+
+  for (j = 0; j <= globval.Cell_nLoc; j++)
+    for (k = 0; k < 6; k++) {
+      x1[k].push_back(0e0); x2[k].push_back(0e0);
+    }
+  
+  fp = file_write("cod_rms.out");
+  
+  n_cod = 0;
+  for (i = 0; i < n_seed; i++) {
+    printf("\norb_corr: seed no %d\n", i+1);
+
+    misalign_rms_type(Dip,  dx, dy, 0e0, true);
+    misalign_rms_type(Quad, dx, dy, 0e0, true);
+    
+    cod = orb_corr(n_cod_corr);
+
+    if (cod) {
+      n_cod++;
+
+      n = 0;
+      for (j = 0; j <= globval.Cell_nLoc; j++)
+	if (all || ((Cell[j].Elem.Pkind == Mpole) &&
+		    (Cell[j].Elem.M->n_design == Sext))) {
+	  n++;
+	  for (k = 0; k < 6; k++) {
+	    x1[k][n-1] += Cell[j].BeamPos[k];
+	    x2[k][n-1] += sqr(Cell[j].BeamPos[k]);
+	  }
+	}
+    } else
+      printf("orb_corr: failed\n");
+
+    // Reset orbit trims.
+    set_bn_design_fam(globval.hcorr, Dip, 0e0, 0e0);
+    set_bn_design_fam(globval.vcorr, Dip, 0e0, 0e0);
+  }
+
+  printf("\nget_cod_rms: no of seeds %d, no of cods %d\n", n_seed, n_cod);
+
+  n = 0;
+  for (j = 0; j <= globval.Cell_nLoc; j++)
+    if (all || ((Cell[j].Elem.Pkind == Mpole) &&
+		(Cell[j].Elem.M->n_design == Sext))) {
+      n++;
+      for (k = 0; k < 6; k++) {
+	x_mean[k].push_back(x1[k][n-1]/n_cod);
+	x_sigma[k].push_back(sqrt((n_cod*x2[k][n-1]-sqr(x1[k][n-1]))
+				  /(n_cod*(n_cod-1.0))));
+      }
+      fprintf(fp, "%8.3f %6.2f %10.3e +/- %10.3e %10.3e +/- %10.3e\n",
+	      Cell[j].S, get_code(Cell[j]),
+	      1e3*x_mean[x_][n-1], 1e3*x_sigma[x_][n-1],
+	      1e3*x_mean[y_][n-1], 1e3*x_sigma[y_][n-1]);
+    } else
+      fprintf(fp, "%8.3f %6.2f\n", Cell[j].S, get_code(Cell[j]));
+  
+  fclose(fp);
+}
+
+
 int main(int argc, char *argv[])
 {
   int           qf, qd, sf, sd;
   double        b2[2], a2, b3[2], b3L[2], a3, a3L;
   ostringstream str;
 
-  const double delta = 3e-2;
-  const double nu[] = {5.0+1.0/7.0, 3.0+3.0/7.0};
+  const long   seed = 1121;
+  const double delta = 5e-2;
+  const double nu[] = {102.22/20.0, 68.18/20.0};
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -88,6 +161,19 @@ int main(int argc, char *argv[])
   prt_lat("linlat.out", globval.bpm, true, 10);
   prt_lat("chromlat.out", globval.bpm, true, 10);
 
+  if (false) {
+    iniranf(seed); setrancut(1e0);
+    globval.bpm = ElemIndex("mon");
+    globval.hcorr = ElemIndex("ch"); globval.vcorr = ElemIndex("cv");
+
+    gcmat(globval.bpm, globval.hcorr, 1);
+    gcmat(globval.bpm, globval.vcorr, 2);
+
+    get_cod_rms(50e-6, 50e-6, 100, true);
+
+    exit(0);
+  }
+
   GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
@@ -100,7 +186,7 @@ int main(int argc, char *argv[])
 	   globval.TotalTune[X_], globval.TotalTune[Y_]);
     printf("  qfe = %8.5f  qde = %8.5f\n", b2[0], b2[1]);
 
-    Ring_GetTwiss(true, 0.0); printglob();
+    Ring_GetTwiss(true, 0e0); printglob();
   }
 
   if (false) {
@@ -114,11 +200,11 @@ int main(int argc, char *argv[])
     printf("\nsfh = %10.5f (%10.5f), sd = %10.5f (%10.5f)\n",
 	   b3[0], b3L[0], b3[1], b3L[1]);
 
-    Ring_GetTwiss(true, 0.0); printglob();
+    Ring_GetTwiss(true, 0e0); printglob();
   }
 
   if (false) {
-    globval.Cavity_on = true;
+    globval.Cavity_on = false;
     get_dynap(delta, 25, 512, true);
   }
 }
