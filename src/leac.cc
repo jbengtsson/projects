@@ -16,17 +16,31 @@ void err_and_corr(const string &param_file, const int mode)
   params.err_and_corr_init(param_file, orb_corr);
 
   if (params.fe_file != "") params.LoadFieldErr(false, 1e0, true);
-  if (params.ae_file != "")
-    cod = params.cod_corr(params.n_cell, 1e0, 1, orb_corr);
-  else
+  if (params.ae_file != "") {
+    // Load misalignments; set seed, no scaling of rms errors.
+    params.LoadAlignTol(false, 1e0, true, 1);
+    // Beam based alignment.
+    if (params.bba) params.Align_BPMs(Quad);
+
+    cod = params.cod_corr(params.n_cell, 1e0, orb_corr);
+  } else
     cod = getcod(0e0, lastpos);
 
-  params.get_dbeta_dnu(m_dbeta, s_dbeta, m_dnu, s_dnu);
-  printf("\n");
-  printf("RMS dbeta_x/beta_x = %4.2f%%,   dbeta_y/beta_y = %4.2f%%\n",
-	 1e2*s_dbeta[X_], 1e2*s_dbeta[Y_]);
-  printf("RMS dnu_x          = %7.5f, dnu_y          = %7.5f\n",
-	 s_dnu[X_], s_dnu[Y_]);
+  params.Orb_and_Trim_Stat();
+
+  if (params.N_calls > 0) {
+    params.ID_corr(params.N_calls, params.N_steps, false);
+    cod = params.cod_corr(params.n_cell, 1e0, orb_corr);
+  }
+
+  // params.Orb_and_Trim_Stat();
+
+  // params.get_dbeta_dnu(m_dbeta, s_dbeta, m_dnu, s_dnu);
+  // printf("\n");
+  // printf("RMS dbeta_x/beta_x = %4.2f%%,   dbeta_y/beta_y = %4.2f%%\n",
+  // 	 1e2*s_dbeta[X_], 1e2*s_dbeta[Y_]);
+  // printf("RMS dnu_x          = %7.5f, dnu_y          = %7.5f\n",
+  // 	 s_dnu[X_], s_dnu[Y_]);
 
   if (cod) {
     if (mode == 1) {
