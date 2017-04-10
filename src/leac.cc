@@ -21,7 +21,7 @@ void err_and_corr(const string &param_file, const int mode)
   else
     cod = getcod(0e0, lastpos);
 
-   params.get_dbeta_dnu(m_dbeta, s_dbeta, m_dnu, s_dnu);
+  params.get_dbeta_dnu(m_dbeta, s_dbeta, m_dnu, s_dnu);
   printf("\n");
   printf("RMS dbeta_x/beta_x = %4.2f%%,   dbeta_y/beta_y = %4.2f%%\n",
 	 1e2*s_dbeta[X_], 1e2*s_dbeta[Y_]);

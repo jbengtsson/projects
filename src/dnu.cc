@@ -8,7 +8,8 @@ int  no_tps = NO;
 int main(int argc, char *argv[])
 {
   
-  const double A_max[] = {2.0e-3, 2.0e-3}, delta_max = 4.5e-2;
+  // const double A_max[] = {1.5e-3, 1.5e-3}, delta_max = 4.5e-2;
+  const double A_max[] = {6.0e-3, 6.0e-3}, delta_max = 5.0e-2;
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;

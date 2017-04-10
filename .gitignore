@@ -17,7 +17,6 @@ config/
 *.Po
 *.rpo
 *.*~
-*.in
 *.dat
 *.out
 *.lat

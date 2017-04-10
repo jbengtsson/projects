@@ -1,8 +1,8 @@
-#define ORDER 1
+#define NO 1
 
 #include "tracy_lib.h"
 
-int no_tps = ORDER;
+int no_tps = NO;
 
 extern bool  freq_map;
 extern int   N_Fam, Q_Fam[];

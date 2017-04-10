@@ -130,13 +130,15 @@ void get_cod_rms(const double dx, const double dy,
 
 int main(int argc, char *argv[])
 {
-  int           qf, qd, sf, sd;
+  int           b2_fam[2], b3_fam[2];
   double        b2[2], a2, b3[2], b3L[2], a3, a3L;
   ostringstream str;
 
-  const long   seed = 1121;
-  const double delta = 5e-2;
-  const double nu[] = {102.22/20.0, 68.18/20.0};
+  const long        seed    = 1121;
+  const double      delta   = 3.0e-2;
+  const double      nu[]    = { 3.22, 0.72 };
+  const std::string q_fam[] = { "qm1", "qm2" };
+  const std::string s_fam[] = { "sf",  "sd" };
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -164,6 +166,7 @@ int main(int argc, char *argv[])
   if (false) {
     iniranf(seed); setrancut(1e0);
     globval.bpm = ElemIndex("mon");
+    // globval.bpm = ElemIndex("bpm");
     globval.hcorr = ElemIndex("ch"); globval.vcorr = ElemIndex("cv");
 
     gcmat(globval.bpm, globval.hcorr, 1);
@@ -177,34 +180,37 @@ int main(int argc, char *argv[])
   GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
-    qf = ElemIndex("qfe"); qd = ElemIndex("qde");
-    FitTune(qf, qd, nu[X_], nu[Y_]);
-    get_bn_design_elem(qf, 1, Quad, b2[0], a2);
-    get_bn_design_elem(qd, 1, Quad, b2[1], a2);
+    b2_fam[0] = ElemIndex(q_fam[0].c_str());
+    b2_fam[1] = ElemIndex(q_fam[1].c_str());
+    FitTune(b2_fam[0], b2_fam[1], nu[X_], nu[Y_]);
+    get_bn_design_elem(b2_fam[0], 1, Quad, b2[0], a2);
+    get_bn_design_elem(b2_fam[1], 1, Quad, b2[1], a2);
 
     printf("\nnu_x = %8.5f nu_y = %8.5f\n",
 	   globval.TotalTune[X_], globval.TotalTune[Y_]);
-    printf("  qfe = %8.5f  qde = %8.5f\n", b2[0], b2[1]);
+    printf("  %s = %8.5f  %s = %8.5f\n",
+	   q_fam[0].c_str(), b2[0], q_fam[1].c_str(), b2[1]);
 
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
   if (false) {
-    sf = ElemIndex("sfh"); sd = ElemIndex("sd");
-    FitChrom(sf, sd, 0e0, 0e0);
-    get_bn_design_elem(sf, 1, Sext, b3[0], a3);
-    get_bn_design_elem(sd, 1, Sext, b3[1], a3);
-    get_bnL_design_elem(sf, 1, Sext, b3L[0], a3L);
-    get_bnL_design_elem(sd, 1, Sext, b3L[1], a3L);
+    b3_fam[0] = ElemIndex(s_fam[0].c_str());
+    b3_fam[1] = ElemIndex(s_fam[1].c_str());
+    FitChrom(b3[0], b3[1], 0e0, 0e0);
+    get_bn_design_elem(b3_fam[0], 1, Sext, b3[0], a3);
+    get_bn_design_elem(b3_fam[1], 1, Sext, b3[1], a3);
+    get_bnL_design_elem(b3_fam[0], 1, Sext, b3L[0], a3L);
+    get_bnL_design_elem(b3_fam[1], 1, Sext, b3L[1], a3L);
 
-    printf("\nsfh = %10.5f (%10.5f), sd = %10.5f (%10.5f)\n",
-	   b3[0], b3L[0], b3[1], b3L[1]);
+    printf("\n%s = %10.5f (%10.5f), %s = %10.5f (%10.5f)\n",
+	   s_fam[0].c_str(), b3[0], b3L[0], s_fam[0].c_str(), b3[1], b3L[1]);
 
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
-  if (false) {
-    globval.Cavity_on = false;
-    get_dynap(delta, 25, 512, true);
+  if (true) {
+    globval.Cavity_on = true;
+    get_dynap(delta, 25, 2064, false);
   }
 }
