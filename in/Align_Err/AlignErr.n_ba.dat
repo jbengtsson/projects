@@ -19,3 +19,4 @@ chv	rms     0.0e-6	  0.0e-6	0.2e-03
 # with bba (roll from loco or bump scan with respect to corr)
 # bpm error should be correlated with quad and/or sext errors to reflect BBA
 bpm	rms     5.0e-6	  5.0e-6	1.0e-05
+
