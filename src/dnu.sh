@@ -2,6 +2,8 @@
 
 DIR=$HOME/git_repos/projects/src
 
+\rm nohup.out
+
 nohup $DIR/dnu      flat_file.dat &
 nohup $DIR/ptc/fmap flat_file.dat 1 &
 nohup $DIR/ptc/fmap flat_file.dat 2 &
