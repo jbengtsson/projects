@@ -8,6 +8,9 @@ gnuplot << EOP
 
 N = $prm1; ps = $prm2; scale = $prm3 == 1;
 
+#MAX-VI: 1, SLS-2: 2.
+case = 1;
+
 f_s = 14; l_w = 2;
 if (ps == 0) \
   set terminal x11; \
@@ -24,22 +27,22 @@ else if (ps == 4) \
   set term pngcairo enhanced color solid lw l_w font "Times-Roman f_s"; \
   ext = "png";
 
-if (N == 1) \
+if ((N == 1) && (case == 1)) \
+  N_x = 102; N_y = 68; \
+else if ((N == 1) && (case == 2)) \
   N_x = 38; N_y = 12; \
 else if (N == 12) \
   N_x = 3; N_y = 1; \
 else if (N == 20) \
   N_x = 5; N_y = 3;
 
-# MAX-VI:
-nu_x_min = 101.7; nu_x_max = 102.5; nu_y_min = 68.0; nu_y_max = 69.0;
-# SLS-2:
-#nu_x_min = 38.0; nu_x_max = 38.5; nu_y_min = 12.0; nu_y_max = 12.6;
+if (case == 1) \
+  nu_x_min = 101.7; nu_x_max = 102.5; nu_y_min = 68.0; nu_y_max = 69.0; \
+  x_min = -2.0; x_max = 2.0; y_min = -2.0; y_max = 2.0; \
+else if (case == 2) \
+  nu_x_min = 38.0; nu_x_max = 38.5; nu_y_min = 12.0; nu_y_max = 12.6; \
+  x_min = -6.0; x_max = 6.0; y_min = -6.0; y_max = 6.0;
 
-# MAX-VI:
-x_min = -2.0; x_max = 2.0; y_min = -2.0; y_max = 2.0;
-# SLS-2:
-#x_min = -6.0; x_max = 6.0; y_min = -6.0; y_max = 6.0;
 delta_min = -5.1; delta_max = 5.1;
 
 set grid;
