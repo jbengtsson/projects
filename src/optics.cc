@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const long        seed    = 1121;
-  const double      delta   = 3.0e-2;
+  const double      delta   = 5.0e-2;
   const double      nu[]    = { 3.22, 0.72 };
   const std::string q_fam[] = { "qm1", "qm2" };
   const std::string s_fam[] = { "sf",  "sd" };
