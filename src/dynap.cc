@@ -30,6 +30,8 @@ int main(int argc, char *argv[])
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.Aperture_on = false;
 
+  globval.CODeps = 1e-10;
+
   if (argc < 1) {
     printf("*** bad command line\n");
     exit(1);
