@@ -13,6 +13,8 @@ void err_and_corr(const string &param_file)
 
   params.err_and_corr_init(param_file, orb_corr);
 
+  globval.CODeps = 1e-10;
+
   globval.Cavity_on = true;
 
   if (params.DA_bare) DA.get_DA_bare(params);
@@ -29,8 +31,6 @@ int main(int argc, char *argv[])
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.Aperture_on = false;
-
-  globval.CODeps = 1e-10;
 
   if (argc < 1) {
     printf("*** bad command line\n");

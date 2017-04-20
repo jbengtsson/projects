@@ -15,6 +15,8 @@ void err_and_corr(const string &param_file, const int mode)
 
   params.err_and_corr_init(param_file, orb_corr);
 
+  globval.CODeps = 1e-10;
+
   if (params.fe_file != "") params.LoadFieldErr(false, 1e0, true);
   if (params.ae_file != "") {
     // Load misalignments; set seed, no scaling of rms errors.
@@ -70,8 +72,6 @@ int main(int argc, char *argv[])
   globval.Cavity_on  = false; globval.radiation   = false;
   globval.emittance  = false; globval.IBS         = false;
   globval.pathlength = false; globval.Aperture_on = false;
-
-  globval.CODeps = 1e-10;
 
   if (argc < 2) {
     printf("*** bad command line\n");
