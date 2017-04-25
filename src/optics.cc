@@ -135,10 +135,10 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const long        seed    = 1121;
-  const double      delta   = 5.0e-2;
-  const double      nu[]    = { 3.22, 0.72 };
-  const std::string q_fam[] = { "qm1", "qm2" };
-  const std::string s_fam[] = { "sf",  "sd" };
+  const double      n_turn  = 2064,
+                    delta   = 5e-2,
+                    nu[]    = { 39.2/12.0, 15.3/12.0 };
+  const std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh",  "sd" };
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -204,13 +204,13 @@ int main(int argc, char *argv[])
     get_bnL_design_elem(b3_fam[1], 1, Sext, b3L[1], a3L);
 
     printf("\n%s = %10.5f (%10.5f), %s = %10.5f (%10.5f)\n",
-	   s_fam[0].c_str(), b3[0], b3L[0], s_fam[0].c_str(), b3[1], b3L[1]);
+	   s_fam[0].c_str(), b3[0], b3L[0], s_fam[1].c_str(), b3[1], b3L[1]);
 
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
   if (true) {
     globval.Cavity_on = true;
-    get_dynap(delta, 25, 2064, false);
+    get_dynap(delta, 25, n_turn, false);
   }
 }

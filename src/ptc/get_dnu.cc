@@ -1,9 +1,9 @@
-//#define NO 6
+// #define NO 6
 // to model tune footprint
 #define NO 8
-//#define NO 10
-//#define NO 12
-//#define NO 15
+// #define NO 10
+// #define NO 12
+// #define NO 15
 
 #include "tracy_lib.h"
 
