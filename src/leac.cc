@@ -35,14 +35,7 @@ void err_and_corr(const string &param_file, const int mode)
     cod = params.cod_corr(params.n_cell, 1e0, orb_corr);
   }
 
-  // params.Orb_and_Trim_Stat();
-
-  // params.get_dbeta_dnu(m_dbeta, s_dbeta, m_dnu, s_dnu);
-  // printf("\n");
-  // printf("RMS dbeta_x/beta_x = %4.2f%%,   dbeta_y/beta_y = %4.2f%%\n",
-  // 	 1e2*s_dbeta[X_], 1e2*s_dbeta[Y_]);
-  // printf("RMS dnu_x          = %7.5f, dnu_y          = %7.5f\n",
-  // 	 s_dnu[X_], s_dnu[Y_]);
+  prtmfile("flat_file.dat");
 
   if (cod) {
     if (mode == 1) {

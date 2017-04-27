@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
   const long        seed    = 1121;
   const double      n_turn  = 2064,
                     delta   = 5e-2,
-                    nu[]    = { 39.2/12.0, 15.3/12.0 };
+                    nu[]    = { 39.7/12.0, 15.3/12.0 };
   const std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh",  "sd" };
 
   globval.H_exact    = false; globval.quad_fringe = false;
@@ -151,6 +151,8 @@ int main(int argc, char *argv[])
     rdmfile(argv[1]);
 
   if (false) no_sxt();
+
+  if (false) globval.Cavity_on = true;
 
   Ring_GetTwiss(true, 0e0); printglob();
 
