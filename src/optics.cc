@@ -138,8 +138,13 @@ int main(int argc, char *argv[])
   const long        seed    = 1121;
   const int         n_turn  = 2064;
   const double      delta   = 5e-2,
+#if 1
+                    nu[]    = { 102.18/20.0, 68.30/20.0 };
+  const std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh",  "sd" };
+#else
                     nu[]    = { 39.1/12.0, 15.25/12.0 };
   const std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh",  "sd" };
+#endif
 
   globval.H_exact    = false; globval.quad_fringe = false;
   globval.Cavity_on  = false; globval.radiation   = false;
@@ -180,7 +185,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) GetEmittance(ElemIndex("cav"), true);
+  if (true) GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
     b2_fam[0] = ElemIndex(q_fam[0].c_str());
@@ -212,17 +217,19 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
-  if (true) {
+  if (false) {
     f_rf = Cell[Elem_GetPos(ElemIndex("cav"), 1)].Elem.C->Pfreq;
     printf("\nf_rf = %10.3e\n", f_rf);
 
     globval.Cavity_on = true;
     // Synchro-betatron resonance for "101pm_above_coupres_tracy.lat".
-    // track("track.out", 2.6e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
-    // 	  0, f_rf);
+    track("track.out", 2.6e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
+    	  0, 0*f_rf);
+    // track("track.out", 1e-6, 0e0, 1.9e-3, 0e0, 0e0, n_turn, lastn, lastpos,
+    // 	  0, 0*f_rf);
     
-    track("track.out", 1e-3, 0e0, 1e-3, 0e0, 0e0, 10*n_turn, lastn, lastpos,
-    	  0, f_rf);
+    // track("track.out", 1e-3, 0e0, 1e-3, 0e0, 0e0, 10*n_turn, lastn, lastpos,
+    // 	  0, f_rf);
   }
 
   if (false) {
