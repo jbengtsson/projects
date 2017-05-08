@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 
   const long        seed    = 1121;
   const int         n_turn  = 2064;
-  const double      delta   = 5e-2,
+  const double      delta   = 3e-2,
 #if 1
                     nu[]    = { 102.18/20.0, 68.30/20.0 };
   const std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh",  "sd" };
@@ -217,19 +217,23 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
-  if (false) {
+  if (true) {
     f_rf = Cell[Elem_GetPos(ElemIndex("cav"), 1)].Elem.C->Pfreq;
     printf("\nf_rf = %10.3e\n", f_rf);
 
     globval.Cavity_on = true;
     // Synchro-betatron resonance for "101pm_above_coupres_tracy.lat".
-    track("track.out", 2.6e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
-    	  0, 0*f_rf);
+    // track("track.out", 2.6e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
+    // 	  0, 0*f_rf);
     // track("track.out", 1e-6, 0e0, 1.9e-3, 0e0, 0e0, n_turn, lastn, lastpos,
     // 	  0, 0*f_rf);
     
     // track("track.out", 1e-3, 0e0, 1e-3, 0e0, 0e0, 10*n_turn, lastn, lastpos,
     // 	  0, f_rf);
+
+    // lattice/101pm_s7o7_a_tracy.lat.
+    track("track.out", 4e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
+    	  0, 0*f_rf);
   }
 
   if (false) {
