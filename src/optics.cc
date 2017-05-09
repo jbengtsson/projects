@@ -128,6 +128,40 @@ void get_cod_rms(const double dx, const double dy,
 }
 
 
+void track(const double Ax, const double Ay)
+{
+  long int        lastpos;
+  int             i;
+  ss_vect<double> xt, xs;
+  FILE            *fd;
+
+  getcod(0e0, lastpos);
+
+  fd = fopen("trackdat_oneturn.dat","w");
+  fprintf(fd, "orbit %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e\n",
+	  Cell[0].BeamPos[0], Cell[0].BeamPos[1],
+	  Cell[0].BeamPos[2], Cell[0].BeamPos[3],
+	  Cell[0].BeamPos[4], Cell[0].BeamPos[5] );
+  fprintf(fd, "orbit %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e\n",
+	  globval.CODvect[0], globval.CODvect[1],
+	  globval.CODvect[2], globval.CODvect[3],
+	  globval.CODvect[4], globval.CODvect[5]);
+
+  xt.zero(); xt[x_] = Ax; xt[y_] = Ay; 
+
+  fprintf(fd, "start %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e\n",
+	  xt[0], xt[1], xt[2], xt[3], xt[4], xt[5] );
+
+  for (i = 0; i <= globval.Cell_nLoc; i++) {
+    Cell_Pass(i, i, xt, lastpos);
+    fprintf(fd, "%5d %22.14e %22.14e %22.14e %22.14e %22.14e %22.14e \n",
+	    i, xt[0], xt[1], xt[2], xt[3], xt[4], xt[5]);
+  }
+
+  fclose(fd);
+}
+
+
 int main(int argc, char *argv[])
 {
   long int      lastn, lastpos;
@@ -136,13 +170,15 @@ int main(int argc, char *argv[])
   ostringstream str;
 
   const long        seed    = 1121;
-  const int         n_turn  = 2064;
+  // const int         n_turn  = 2064;
+  const int         n_turn  = 50*400;
   const double      delta   = 3e-2,
-#if 1
+#if 0
                     nu[]    = { 102.18/20.0, 68.30/20.0 };
   const std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh",  "sd" };
 #else
                     nu[]    = { 39.1/12.0, 15.25/12.0 };
+                    // nu[]    = { 3.266+0.01, 1.275 };
   const std::string q_fam[] = { "qm2b", "qm3" }, s_fam[] = { "sfh",  "sd" };
 #endif
 
@@ -156,9 +192,14 @@ int main(int argc, char *argv[])
   else
     rdmfile(argv[1]);
 
-  if (false) no_sxt();
+  if (true) {
+    globval.Cavity_on = true;
 
-  if (false) globval.Cavity_on = true;
+    track(6e-3, 0.1e-3);
+    // exit(0);
+  }
+
+  if (false) no_sxt();
 
   Ring_GetTwiss(true, 0e0); printglob();
 
@@ -185,7 +226,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (true) GetEmittance(ElemIndex("cav"), true);
+  if (false) GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
     b2_fam[0] = ElemIndex(q_fam[0].c_str());
@@ -217,7 +258,9 @@ int main(int argc, char *argv[])
     Ring_GetTwiss(true, 0e0); printglob();
   }
 
-  if (true) {
+  if (false) {
+    globval.Cavity_on = false; globval.radiation = false;
+
     f_rf = Cell[Elem_GetPos(ElemIndex("cav"), 1)].Elem.C->Pfreq;
     printf("\nf_rf = %10.3e\n", f_rf);
 
@@ -232,7 +275,7 @@ int main(int argc, char *argv[])
     // 	  0, f_rf);
 
     // lattice/101pm_s7o7_a_tracy.lat.
-    track("track.out", 4e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
+    track("track.out", 5.5e-3, 0e0, 1e-6, 0e0, 0e0, n_turn, lastn, lastpos,
     	  0, 0*f_rf);
   }
 
