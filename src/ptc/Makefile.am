@@ -1,8 +1,9 @@
-bin_PROGRAMS = fmap get_dnu vlad
+bin_PROGRAMS = fmap get_dnu vlad tracy_2_3
 
-fmap_SOURCES    = fmap.cc
-get_dnu_SOURCES = get_dnu.cc
-vlad_SOURCES    = vlad.cc
+fmap_SOURCES      = fmap.cc
+get_dnu_SOURCES   = get_dnu.cc
+vlad_SOURCES      = vlad.cc
+tracy_2_3_SOURCES = tracy_2_3.cc
 
 LIBS     = -L$(TRACY_LIB)/tracy/lib -ltracy_ptc -lTPSALib -lLieLib \
            -L$(NUM_REC)/lib -lnum_rec \

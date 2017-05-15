@@ -1,9 +1,9 @@
 #!/bin/sh
 
-queue="prime_bd.q"
+queue="prime_bdl.q"
 
-t1="24:00:00"
-t2="24:00:00"
+t1="96:00:00"
+t2="96:00:00"
 
 #dir=`pwd`
 dir=$HOME/git_repos/projects/src

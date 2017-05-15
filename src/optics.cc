@@ -167,12 +167,12 @@ int main(int argc, char *argv[])
   long int      lastn, lastpos;
   int           b2_fam[2], b3_fam[2];
   double        b2[2], a2, b3[2], b3L[2], a3, a3L, f_rf;
+  double        alpha[2], beta[2], eta[2], etap[2];
   ostringstream str;
 
   const long        seed    = 1121;
-  // const int         n_turn  = 2064;
-  const int         n_turn  = 50*400;
-  const double      delta   = 3e-2,
+  const int         n_turn  = 2064;
+  const double      delta   = 1e-2,
 #if 0
                     nu[]    = { 102.18/20.0, 68.30/20.0 };
   const std::string q_fam[] = { "qfe", "qde" }, s_fam[] = { "sfh",  "sd" };
@@ -192,11 +192,21 @@ int main(int argc, char *argv[])
   else
     rdmfile(argv[1]);
 
-  if (true) {
-    globval.Cavity_on = true;
+  if (false) {
+    alpha[X_] =  0.1544319; alpha[Y_] = 0.01338387;
+    beta[X_]  = 18.95131;   beta[Y_]  = 0.6139210;
+    eta[X_]   =  1.024184;  eta[Y_]   = 0.0;
+    etap[X_]  =  0.0;       etap[Y_]  = 0.0;
+    ttwiss(alpha, beta, eta, etap, 0e0);
+    prt_lat("linlat1.out", globval.bpm, true);
+    prt_lat("linlat.out", globval.bpm, true, 10);
+    exit(0);
+  }
 
+  if (false) {
+    globval.Cavity_on = true;
     track(6e-3, 0.1e-3);
-    // exit(0);
+    exit(0);
   }
 
   if (false) no_sxt();
@@ -226,7 +236,7 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  if (false) GetEmittance(ElemIndex("cav"), true);
+  if (true) GetEmittance(ElemIndex("cav"), true);
 
   if (false) {
     b2_fam[0] = ElemIndex(q_fam[0].c_str());
@@ -279,7 +289,7 @@ int main(int argc, char *argv[])
     	  0, 0*f_rf);
   }
 
-  if (false) {
+  if (true) {
     globval.Cavity_on = true;
     get_dynap(delta, 25, n_turn, false);
   }
